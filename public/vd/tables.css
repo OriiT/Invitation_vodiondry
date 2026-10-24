@@ -1,0 +1,217 @@
+/* Plan de table : page de travail (glisser-déposer), plan imprimable, marque-tables. */
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+[hidden] { display: none !important; }
+/* Boutons « Déplacer » / « Filtrer » : utiles seulement sans JavaScript. */
+.tp-js .tp-go { display: none; }
+
+/* ---- résumé */
+.stats.tp-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 640px) { .stats.tp-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.tp-pub {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
+  margin: 0 0 16px; font-size: 0.92rem; color: var(--muted);
+}
+.tp-pub a { margin-left: auto; font-weight: 600; }
+.tp-warn, .tp-over-all { margin: 0 0 16px; }
+.tp-help { margin: 0 0 14px; }
+
+/* ---- ajout d'une table */
+.tp-create { padding: 0; }
+.tp-create > summary {
+  list-style: none; cursor: pointer; padding: 14px 16px; font-weight: 700; color: var(--brown);
+  border-radius: var(--radius); -webkit-tap-highlight-color: transparent;
+}
+.tp-create > summary::-webkit-details-marker { display: none; }
+.tp-create > summary:focus-visible { outline: 2px solid var(--brown); outline-offset: 2px; }
+.tp-create[open] > summary { border-bottom: 1px solid var(--line); border-radius: var(--radius) var(--radius) 0 0; }
+.tp-create .tp-form { padding: 16px; }
+.tp-num { flex: 0 1 104px; min-width: 88px; }
+.tp-form-err {
+  margin: 0; padding: 10px 12px; border-radius: 10px; font-size: 0.9rem;
+  background: var(--no-bg); border: 1px solid #e9c4bf; color: #7a2a22;
+}
+
+/* ---- tableau de travail */
+.tp-board { display: grid; grid-template-columns: minmax(270px, 340px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.tp-tables { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; align-items: start; }
+.tp-board .card { margin: 0; }
+.tp-pool { position: sticky; top: 112px; }
+.tp-pool .tp-pool-list { max-height: calc(100vh - 330px); min-height: 72px; overflow-y: auto; overscroll-behavior: contain; padding-right: 2px; }
+@media (max-width: 860px) {
+  .tp-board { grid-template-columns: minmax(0, 1fr); }
+  .tp-pool { position: static; }
+  /* Liste au milieu de la page : arrivée en bas de la liste, le geste continue de faire défiler la page. */
+  .tp-pool .tp-pool-list { max-height: 55vh; overscroll-behavior: auto; }
+}
+
+.tp-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; margin-bottom: 8px; }
+.tp-title { margin: 0; font-size: 1.1rem; overflow-wrap: anywhere; }
+.tp-count { color: var(--muted); font-size: 0.9rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tp-count b { color: var(--ink); font-size: 1.05rem; }
+.tp-meter { height: 6px; border-radius: 999px; background: #f1ebe3; overflow: hidden; margin-bottom: 12px; }
+.tp-meter > span { display: block; height: 100%; background: var(--ok); border-radius: inherit; transition: width 0.25s ease; }
+.tp-table.is-over { border-color: #e7c66f; box-shadow: 0 0 0 2px var(--warn-bg), var(--shadow); }
+.tp-table.is-over .tp-count, .tp-table.is-over .tp-count b { color: var(--no); }
+.tp-table.is-over .tp-meter > span { background: var(--no); }
+.tp-over { margin: 0 0 12px; font-weight: 600; font-size: 0.9rem; }
+.tp-empty h2 { margin-bottom: 4px; }
+
+/* ---- filtre des invités à placer */
+.tp-filter { display: flex; gap: 8px; margin-bottom: 10px; }
+.tp-filter-q { flex: 1 1 auto; min-width: 0; }
+.tp-filter-side { flex: 0 1 150px; min-width: 0; }
+.tp-filter input, .tp-filter select { min-height: 38px; }
+.tp-noresult { margin: 0 0 8px; }
+.tp-pool-hint { margin: 10px 0 0; }
+
+/* ---- listes et pastilles d'invités */
+/* minmax(0, 1fr) : une pastille ne peut pas être plus large que sa liste (menu « Déplacer vers… » avec un long nom de table). */
+.tp-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; min-height: 64px; align-content: start; border-radius: 10px; }
+.tp-list:empty {
+  display: flex; align-items: center; justify-content: center; padding: 12px;
+  border: 1.5px dashed var(--line); background: #fdfbf8;
+}
+.tp-list:empty::before { content: attr(data-empty); color: var(--muted); font-size: 0.85rem; text-align: center; }
+
+.tp-chip {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; padding: 8px 10px 8px 8px;
+  background: #fbf8f4; border: 1px solid var(--line); border-left: 4px solid var(--sat); border-radius: 10px;
+  cursor: grab; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.tp-chip.side-rojo { border-left-color: #c79bbd; }
+.tp-chip.side-orimbato { border-left-color: #93add0; }
+.tp-chip-top { display: flex; align-items: baseline; gap: 6px; }
+.tp-grip {
+  flex: 0 0 auto; align-self: center; width: 10px; height: 16px; opacity: 0.45;
+  background-image: radial-gradient(circle, var(--muted) 1.2px, transparent 1.6px);
+  background-size: 5px 5px;
+}
+.tp-name { flex: 1 1 auto; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+.tp-pers { flex: 0 0 auto; color: var(--muted); font-size: 0.85rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tp-chip-bottom { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding-left: 16px; }
+.tp-sidename { font-size: 0.78rem; color: var(--muted); }
+/* Le menu passe à la ligne s'il ne tient pas à côté du badge, et rétrécit plutôt que de déborder de la pastille. */
+.tp-move { flex: 0 1 auto; max-width: 100%; margin: 0 0 0 auto; display: flex; gap: 6px; align-items: center; min-width: 0; cursor: auto; }
+.tp-move-l { flex: 0 1 auto; display: flex; align-items: center; gap: 6px; min-width: 0; }
+.tp-move-t { font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
+.tp-move select { flex: 0 1 auto; width: auto; min-width: 0; max-width: 12.5rem; min-height: 34px; padding: 3px 8px; border-radius: 8px; background-color: #fff; }
+.tp-chip.is-busy { opacity: 0.55; pointer-events: none; }
+.tp-chip.is-moved { animation: tp-flash 1.2s ease; }
+@keyframes tp-flash { from { background: var(--ok-bg); border-color: var(--ok); } to { background: #fbf8f4; } }
+
+/* états SortableJS */
+.tp-ghost { opacity: 0.35; background: var(--warn-bg); }
+.tp-chosen { box-shadow: 0 8px 24px rgba(60, 40, 20, 0.18); }
+.tp-drag { transform: rotate(1.5deg); }
+.tp-board.is-dragging .tp-list { outline: 1.5px dashed var(--sat); outline-offset: 4px; }
+
+/* modification d'une table */
+.tp-edit { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 8px; }
+.tp-edit > summary { cursor: pointer; color: var(--brown); font-weight: 600; font-size: 0.88rem; padding: 6px 0; }
+.tp-edit .tp-form { margin-top: 8px; gap: 10px; }
+.tp-del { margin-top: 12px; }
+
+/* message après un déplacement (zone aria-live) */
+.tp-live {
+  position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 40;
+  transform: translateX(-50%); width: max-content; max-width: min(92vw, 520px);
+  margin: 0; padding: 12px 16px; border-radius: 12px; font-size: 0.92rem; line-height: 1.35;
+  background: rgba(41, 41, 41, 0.94); color: #fff; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+.tp-live:empty { padding: 0; box-shadow: none; background: none; }
+.tp-live.is-warn { background: #7a5500; }
+.tp-live.is-err { background: #8a2f26; }
+
+/* ---- barre d'outils des pages imprimables */
+.tp-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; max-width: 190mm; margin: 0 auto 16px; }
+.tp-toolbar-hint { flex: 1 1 100%; margin: 0; }
+.tp-seg { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+
+/* ---- plan imprimable */
+.tpp { max-width: 190mm; margin: 0 auto; color: var(--ink); }
+.tpp-head { border-bottom: 2px solid var(--ink); padding-bottom: 8px; margin-bottom: 14px; }
+.tpp-head h1 { font-size: 1.3rem; margin: 0 0 4px; }
+.tpp-meta { margin: 0; color: var(--muted); font-size: 0.85rem; }
+.tpp-grid { columns: 2 250px; column-gap: 8mm; }
+.tpp-table {
+  break-inside: avoid; page-break-inside: avoid; -webkit-column-break-inside: avoid;
+  border: 1px solid var(--sat); border-radius: 8px; padding: 8px 12px; margin: 0 0 10px;
+}
+.tpp-table h2 {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+  font-size: 1.02rem; margin: 0 0 6px; padding-bottom: 4px; border-bottom: 1px solid var(--line);
+}
+.tpp-tname { overflow-wrap: anywhere; }
+.tpp-count { font-size: 0.85rem; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tpp-table.is-over { border-color: var(--no); }
+.tpp-table.is-over .tpp-count, .tpp-over { color: var(--no); }
+.tpp-over { margin: 0 0 6px; font-size: 0.82rem; font-weight: 700; }
+.tpp-guests { margin: 0; padding-left: 1.5em; font-size: 0.9rem; }
+.tpp-guests li { padding: 1px 0; }
+.tpp-seats { margin-left: 6px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tpp-pending { margin-left: 6px; font-size: 0.75rem; font-style: italic; color: var(--muted); }
+.tpp-none { color: var(--muted); font-style: italic; margin: 0; }
+.tpp-unplaced { margin-top: 16px; border-style: dashed; }
+.tpp-unplaced .tpp-guests { columns: 2 220px; column-gap: 8mm; }
+
+/* ---- marque-tables (tailles en unités de conteneur : identiques à l'écran et sur papier) */
+.tc-sheet { display: grid; gap: 16px; justify-items: center; margin: 0 auto 16px; }
+.tc-card {
+  container-type: inline-size;
+  display: flex; flex-direction: column;
+  width: min(100%, 190mm); aspect-ratio: 190 / 138;
+  background: #fff; color: #292929; border: 1px dashed #b8aa96;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+.tc-face {
+  position: relative; flex: 1 1 0; min-height: 0; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 3cqw 7cqw; text-align: center;
+}
+.tc-face::before {
+  content: ""; position: absolute; inset: 2.4cqw; pointer-events: none;
+  border: 0.3cqw solid #d9cdbd; outline: 0.12cqw solid #d9cdbd; outline-offset: -1cqw;
+}
+.tc-tent .tc-back { transform: rotate(180deg); }
+.tc-fold { flex: 0 0 0; border-top: 1px dotted #c5b7a3; }
+.tc-script { font-family: Allura, "Snell Roundhand", "Apple Chancery", cursive; font-size: 6cqw; line-height: 1; color: #6b4e36; margin-bottom: 0.4cqw; }
+.tc-name {
+  max-width: 100%; font-family: Cinzel, "Trajan Pro", Georgia, serif; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em; padding-left: 0.06em; line-height: 1.12;
+  overflow-wrap: anywhere; text-wrap: balance; color: #292929;
+}
+.tc-xl { font-size: 13cqw; }
+.tc-l { font-size: 9.5cqw; }
+.tc-m { font-size: 6.6cqw; }
+.tc-s { font-size: 4.8cqw; }
+.tc-xs { font-size: 3.6cqw; }
+.tc-flat .tc-script { font-size: 9cqw; }
+.tc-flat .tc-xl { font-size: 22cqw; }
+.tc-flat .tc-l { font-size: 11cqw; }
+.tc-flat .tc-m { font-size: 7cqw; }
+.tc-flat .tc-s { font-size: 5.2cqw; }
+.tc-flat .tc-xs { font-size: 4cqw; }
+.tc-rule { display: flex; align-items: center; gap: 1.6cqw; width: 34cqw; margin: 1.8cqw 0 1.4cqw; }
+.tc-rule::before, .tc-rule::after { content: ""; flex: 1 1 auto; height: 0; border-top: 0.2cqw solid #b8a48b; }
+.tc-rule i { flex: 0 0 auto; width: 1.3cqw; height: 1.3cqw; background: #b8a48b; transform: rotate(45deg); }
+.tc-line { font-family: Cardo, "Times New Roman", serif; font-weight: 700; font-size: 1.9cqw; letter-spacing: 0.22em; padding-left: 0.22em; text-transform: uppercase; color: #6f655b; }
+.tc-flat .tc-line { font-size: 2.2cqw; }
+.tc-flat .tc-rule { width: 40cqw; margin: 2.6cqw 0 2cqw; }
+
+/* ---- impression */
+@page { size: A4 portrait; margin: 10mm; }
+@media print {
+  body.bare .print-wrap { padding: 0; }
+  .tpp { max-width: none; }
+  .tpp-head h1 { font-size: 15pt; }
+  .tpp-guests { font-size: 10pt; }
+  .tc-sheet { display: flex; flex-direction: column; width: 190mm; height: 276mm; gap: 0; margin: 0; break-after: page; page-break-after: always; }
+  .tc-sheet:last-child { break-after: auto; page-break-after: auto; }
+  .tc-card { width: 190mm; height: 138mm; aspect-ratio: auto; flex: 0 0 138mm; break-inside: avoid; page-break-inside: avoid; }
+  .tc-card + .tc-card { border-top: 0; }
+}

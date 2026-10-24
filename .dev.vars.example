@@ -1,0 +1,3 @@
+# Secrets pour le développement local (npm run dev). Ne sert PAS en production.
+ADMIN_PASSWORD=admin-local
+SESSION_SECRET=remplacez-moi-par-une-longue-chaine-aleatoire-locale
