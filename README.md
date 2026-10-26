@@ -28,40 +28,113 @@ Petite application web pour le **vodiondry du samedi 19 décembre 2026**
 
 ## 1. Sur votre PC : installer et essayer en local
 
-Cette partie installe le projet sur votre ordinateur et le fait tourner **uniquement chez vous**
-(rien n’est encore en ligne). C’est aussi depuis ce PC que vous mettrez le site en ligne à la partie 2.
+Cette partie installe le projet sur votre ordinateur, le relie au dépôt GitHub et le fait tourner
+**uniquement chez vous** (rien n’est encore en ligne). C’est aussi depuis ce PC que vous mettrez le site
+en ligne à la partie 2.
 
-### Étape A1 — Installer Node.js (l’outil qui lance les commandes)
+### Étape A1 — Installer les trois outils
 
-1. Allez sur <https://nodejs.org> et téléchargez la version **LTS** (« Long Term Support »,
-   la version stable et maintenue avec les correctifs de sécurité). Évitez la version « Current ».
-2. Installez-la (suivant, suivant… en gardant les choix proposés).
-3. Vérifiez : ouvrez un terminal (voir A3) et tapez `node -v`. Il doit afficher `v22…` ou plus récent.
+| Outil | À quoi il sert | Où le télécharger |
+|---|---|---|
+| **Node.js** (version **LTS**) | lancer les outils de Cloudflare et le site en local | <https://nodejs.org> → bouton « LTS » |
+| **Git** | récupérer le code depuis GitHub et envoyer vos modifications | <https://git-scm.com/downloads> |
+| **GitHub CLI** (`gh`) | relier l’ordinateur à votre compte GitHub, sans mot de passe à taper | <https://cli.github.com> |
 
-> Node.js ne sert que **sur votre PC**, pour lancer les outils de Cloudflare. Il ne tourne pas sur le
-> site en ligne. Voir [Questions fréquentes](#6-questions-fréquentes).
+Installez-les dans cet ordre (suivant, suivant… en gardant les choix proposés).
+Sur Mac, si `git` manque, macOS propose d’installer les « outils de ligne de commande » : acceptez.
 
-### Étape A2 — Récupérer le projet
+> Prenez la version **LTS** de Node.js (stable, avec les correctifs de sécurité), pas « Current ».
+> Node.js ne sert que **sur votre PC** : il ne tourne pas sur le site en ligne
+> (voir [Questions fréquentes](#6-questions-fréquentes)).
 
-Sur GitHub (<https://github.com/OriiT/Invitation_vodiondry>), bouton vert **Code → Download ZIP**,
-puis décompressez le fichier dans un dossier facile à retrouver (par exemple `Documents\vodiondry`).
-Copiez aussi `Budget_reception_5.xlsx` dans ce dossier.
+### Étape A2 — Ouvrir un terminal
 
-### Étape A3 — Ouvrir un terminal dans le dossier du projet
-
-- **Windows** : ouvrez le dossier dans l’Explorateur, cliquez dans la barre d’adresse, tapez `cmd` puis Entrée.
-- **Mac** : clic droit sur le dossier → *Services* → *Nouveau terminal au dossier*
-  (ou ouvrez *Terminal*, tapez `cd ` puis glissez le dossier dans la fenêtre, Entrée).
+- **Windows** : ouvrez le dossier **Documents** dans l’Explorateur, cliquez dans la barre d’adresse,
+  tapez `cmd` puis Entrée.
+- **Mac** : ouvrez l’application **Terminal**, tapez `cd ~/Documents` puis Entrée.
 
 Toutes les commandes se tapent dans ce terminal, **une par une**, suivies de Entrée.
+Vérifiez les installations (chaque commande doit afficher un numéro de version) :
 
-### Étape A4 — Installer les outils du projet (une seule fois, 1 à 2 minutes)
+```
+node -v
+git --version
+gh --version
+```
+
+(`node -v` doit afficher `v22…` ou plus récent. Si une commande « n’est pas reconnue »,
+fermez puis rouvrez le terminal ; sinon réinstallez l’outil.)
+
+### Étape A3 — Vous présenter à Git (une seule fois)
+
+Git signe chaque modification avec un nom et une adresse e-mail. Mettez **votre** nom et l’e-mail de
+votre compte GitHub :
+
+```
+git config --global user.name "Votre Prénom"
+git config --global user.email "votre-email@exemple.com"
+```
+
+### Étape A4 — Relier l’ordinateur à votre compte GitHub (une seule fois)
+
+```
+gh auth login
+```
+
+Répondez aux questions avec les flèches du clavier puis Entrée :
+
+1. *Where do you use GitHub?* → **GitHub.com**
+2. *What is your preferred protocol for Git operations?* → **HTTPS**
+3. *Authenticate Git with your GitHub credentials?* → **Yes**
+4. *How would you like to authenticate GitHub CLI?* → **Login with a web browser**
+5. Le terminal affiche un code à 8 caractères (ex. `A1B2-C3D4`) : appuyez sur Entrée, le navigateur
+   s’ouvre sur GitHub ; connectez-vous, collez le code, cliquez **Authorize**.
+
+Le terminal affiche « ✓ Logged in as … ». Vérifiez à tout moment avec `gh auth status`.
+Git utilisera cette connexion : plus besoin de mot de passe pour envoyer vos modifications.
+
+### Étape A5 — Récupérer le dépôt distant (cloner)
+
+Toujours dans le terminal ouvert dans **Documents** :
+
+```
+git clone https://github.com/OriiT/Invitation_vodiondry.git
+cd Invitation_vodiondry
+```
+
+Un dossier `Documents/Invitation_vodiondry` est créé avec tout le projet, relié au dépôt GitHub.
+Vérifiez le lien avec le dépôt distant :
+
+```
+git remote -v
+git status
+```
+
+`git remote -v` affiche deux lignes `origin  https://github.com/OriiT/Invitation_vodiondry.git` ;
+`git status` affiche « On branch main … up to date with 'origin/main' ».
+
+> Tant que la pull request n’est pas fusionnée dans `main`, le code est sur une autre branche :
+> tapez `git checkout claude/adoring-allen-s5ggsa` (une fois la fusion faite, restez sur `main`).
+
+Copiez enfin `Budget_reception_5.xlsx` dans ce dossier `Invitation_vodiondry`. Il ne sera **jamais**
+envoyé sur GitHub (le dépôt est public et le fichier `.gitignore` exclut les `.xlsx` : `git status`
+ne le montre même pas).
+
+**Pour rouvrir un terminal plus tard au bon endroit** : ouvrez le dossier `Invitation_vodiondry` dans
+l’Explorateur et tapez `cmd` dans la barre d’adresse (Windows), ou `cd ~/Documents/Invitation_vodiondry`
+dans Terminal (Mac).
+
+> Sans Git, vous pouvez aussi faire **Code → Download ZIP** sur la page GitHub et décompresser :
+> tout fonctionne, mais vous ne pourrez ni envoyer de modification ni récupérer les mises à jour
+> avec `git pull`.
+
+### Étape A6 — Installer les outils du projet (une seule fois, 1 à 2 minutes)
 
 ```
 npm install
 ```
 
-### Étape A5 — Lancer le site sur votre PC
+### Étape A7 — Lancer le site sur votre PC
 
 ```
 npm run dev
@@ -72,9 +145,10 @@ Attendez la ligne `Ready on http://localhost:8787`, puis ouvrez dans votre navig
 - <http://localhost:8787> : l’invitation générique ;
 - <http://localhost:8787/admin> : l’administration (mot de passe local : **`admin-local`**).
 
-### Étape A6 — Essayer avec la vraie liste (en local)
+### Étape A8 — Essayer avec la vraie liste (en local)
 
-Laissez le premier terminal ouvert, ouvrez-en un **second** dans le même dossier (A3), puis :
+Laissez le premier terminal ouvert, ouvrez-en un **second** dans le dossier `Invitation_vodiondry`,
+puis :
 
 ```
 npm run import -- Budget_reception_5.xlsx --local
@@ -132,6 +206,15 @@ database_id = "8c1f2a4e-1234-4abc-9def-0123456789ab"
    ```
 
 4. Enregistrez le fichier.
+5. Envoyez cette modification sur GitHub, pour que le dépôt distant contienne la bonne configuration :
+
+   ```
+   git add wrangler.toml
+   git commit -m "Identifiant de la base D1 de production"
+   git push
+   ```
+
+   (L’identifiant n’est pas un secret : sans accès à votre compte Cloudflare, il ne permet rien.)
 
 ### Étape B4 — Créer les tables de la base
 
@@ -232,6 +315,18 @@ C’est en ligne. 🎉
 
 Voir [Questions fréquentes → un nom de domaine à soi](#un-nom-de-domaine-à-soi-facultatif-environ-10--par-an).
 
+### Étape B10 (facultative) — Relier Cloudflare au dépôt GitHub (mise en ligne automatique)
+
+Sans cette étape, chaque mise à jour se publie depuis le PC avec `npm run deploy`. Avec elle,
+Cloudflare republie le site tout seul à chaque modification de la branche `main` sur GitHub :
+
+1. Tableau de bord Cloudflare → **Workers & Pages → vodiondry → Settings → Build** → **Connect**.
+2. Choisissez **GitHub**, autorisez l’application Cloudflare sur le dépôt `OriiT/Invitation_vodiondry`.
+3. Branche : `main` ; commande de build : laissez vide ; commande de déploiement : `npm run deploy`.
+4. Enregistrez. Les publications apparaissent dans l’onglet **Deployments**.
+
+Prérequis : l’identifiant de la base doit être sur GitHub (étape B3, point 5).
+
 ---
 
 ## 3. Utilisation au quotidien
@@ -301,6 +396,22 @@ changement du mot de passe de l’administration.
 
 ---
 
+### Récupérer une mise à jour du code
+
+Si le code change sur GitHub (correction, nouvelle fonction), dans le terminal ouvert dans le dossier
+`Invitation_vodiondry` :
+
+```
+git pull
+npm install
+npm run deploy
+```
+
+`git pull` récupère les modifications du dépôt distant ; `npm run deploy` les met en ligne
+(inutile si l’étape B10 est faite). Les invités, réponses et réglages en ligne sont conservés.
+
+---
+
 ## 4. Tout supprimer après le 19 décembre
 
 1. (Facultatif) Gardez un souvenir : **/admin → Import / export → Exporter (CSV)**.
@@ -322,7 +433,8 @@ changement du mot de passe de l’administration.
 
 3. (Facultatif) `npx wrangler logout` pour délier l’ordinateur de votre compte, et supprimez le compte
    Cloudflare depuis *My Profile → Delete account* si vous ne vous en servez plus.
-4. (Facultatif) Désinstallez Node.js de votre PC et supprimez le dossier du projet.
+4. (Facultatif) Désinstallez Node.js, Git et GitHub CLI de votre PC, supprimez le dossier du projet,
+   et `gh auth logout` pour délier l’ordinateur de GitHub.
 
 Sans passer par le terminal, c’est aussi possible dans le tableau de bord Cloudflare :
 *Workers & Pages → vodiondry → Settings → Delete*, puis *Storage & Databases → D1 → vodiondry → Delete*.
@@ -341,7 +453,9 @@ Sans passer par le terminal, c’est aussi possible dans le tableau de bord Clou
 | Mot de passe de l’administration oublié (après l’avoir changé dans Réglages) | `npx wrangler d1 execute vodiondry --remote --command "DELETE FROM settings WHERE key = 'admin_password_hash'"` → le mot de passe redevient celui de l’étape B5 (`npx wrangler secret put ADMIN_PASSWORD` pour en choisir un autre). |
 | « Trop de tentatives » | Protection contre les abus : attendez 15 minutes. |
 | Un invité dit que son lien « n’est plus valide » | Son code a été régénéré : renvoyez-lui le nouveau lien depuis sa fiche. |
-| Modifier le site après coup | Refaites `npm run deploy` (les données sont conservées). |
+| Modifier le site après coup | `git pull` puis `npm run deploy` (les données sont conservées). |
+| `git push` refusé (`Authentication failed`, `403`) | `gh auth login` (étape A4), puis `gh auth status` doit afficher « Logged in ». |
+| `git pull` refuse à cause de « local changes » sur `wrangler.toml` | Envoyez d’abord votre modification (étape B3, point 5), puis refaites `git pull`. |
 | Un invité n’arrive pas à ouvrir le lien depuis le réseau de son entreprise | Qu’il l’ouvre sur son téléphone en 4G ; voir aussi [Questions fréquentes](#6-questions-fréquentes). |
 
 ---
