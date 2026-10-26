@@ -27,6 +27,64 @@
     });
   }
 
+  // Petit rebond : si l'invité reste sur la page 2 ou 3 sans rien toucher, la page monte un instant puis redescend,
+  // laissant entrevoir le haut de la suivante (une fois par page). Mouvement visuel seulement (transform) ; pendant
+  // ce temps, l'aimantation des pages est suspendue (sinon le navigateur suit le mouvement et l'annule) puis
+  // rétablie : la position de défilement ne change pas. Rien si moins d'animations demandé.
+  const pageEl = $('#page');
+  const PEEK = [['#sc2', 6000], ['#sc3', 11000]]; // délai sans geste ; page 3 : après l'écriture de la carte
+  if (pageEl && pageEl.animate && 'IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const root = document.documentElement;
+    const done = new Set();
+    let current = null;
+    let timer = 0;
+    let anim = null;
+    const stop = () => {
+      if (anim) anim.cancel();
+      anim = null;
+      root.style.scrollSnapType = '';
+    };
+    const arm = () => {
+      clearTimeout(timer);
+      if (!current || done.has(current)) return;
+      timer = setTimeout(peek, PEEK.find(([s]) => s === '#' + current.id)[1]);
+    };
+    const peek = () => {
+      const r = current && current.getBoundingClientRect();
+      if (!r || Math.abs(r.top) > 4 || done.has(current)) return;
+      // Pas pendant l'enveloppe, la fenêtre de réponse, ni onglet en arrière-plan : on réessaie plus tard.
+      if (!root.classList.contains('opened') || root.classList.contains('locked') || root.classList.contains('vd-lock') || document.hidden) return arm();
+      done.add(current);
+      const up = (k) => 'translateY(' + -Math.round(innerHeight * k) + 'px)';
+      root.style.scrollSnapType = 'none';
+      anim = pageEl.animate(
+        [
+          { transform: 'none', easing: 'cubic-bezier(.3,0,.2,1)' },
+          { transform: up(0.09), offset: 0.34, easing: 'cubic-bezier(.5,0,.6,1)' },
+          { transform: 'none', offset: 0.68, easing: 'cubic-bezier(.3,0,.2,1)' },
+          { transform: up(0.025), offset: 0.84, easing: 'cubic-bezier(.5,0,.6,1)' },
+          { transform: 'none' },
+        ],
+        { duration: 1500 },
+      );
+      anim.onfinish = stop;
+    };
+    const io = new IntersectionObserver(
+      (es) => es.forEach((e) => {
+        if (e.intersectionRatio >= 0.97) { current = e.target; arm(); }
+        else if (current === e.target && !anim) { current = null; clearTimeout(timer); }
+      }),
+      { threshold: [0.97] },
+    );
+    PEEK.forEach(([s]) => { const el = $(s); if (el) io.observe(el); });
+    // Enveloppe ouverte, fenêtre de réponse fermée… : le délai repart de l'instant où la page est visible.
+    new MutationObserver(arm).observe(root, { attributes: true, attributeFilter: ['class'] });
+    // L'invité agit : on repart de zéro (et un rebond en cours s'arrête net).
+    ['pointerdown', 'wheel', 'keydown', 'touchstart'].forEach((t) =>
+      addEventListener(t, () => { if (anim) stop(); arm(); }, { passive: true }),
+    );
+  }
+
   const yes = $('#rsvpYes');
   const no = $('#rsvpNo');
   const wrap = $('#t3wrap');
@@ -78,12 +136,15 @@
   const LONGER_TEXT = 105; // au-delà : .vd-longer
   const MAX_TEXT = 125;
 
+  // Date limite courte (« 12/12 ») pour la phrase-consigne.
+  const shortDeadline = fmtDate(D.deadline).slice(0, 5);
+
   function statusText() {
     const r = state.response;
     if (!r) {
       const withName = (who) =>
         state.open
-          ? (who ? who + ', nous' : 'Nous') + ' attendons votre réponse.'
+          ? (who ? who + ', touchez' : 'Touchez') + ' Oui ou Non pour nous répondre' + (shortDeadline ? ' avant le ' + shortDeadline : '') + '.'
           : (who ? who + ', les' : 'Les') + ' réponses sont closes : contactez les mariés.';
       const t = withName(name);
       return t.length > MAX_TEXT ? withName('') : t;
