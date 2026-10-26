@@ -38,10 +38,34 @@ en ligne à la partie 2.
 |---|---|---|
 | **Node.js** (version **LTS**) | lancer les outils de Cloudflare et le site en local | <https://nodejs.org> → bouton « LTS » |
 | **Git** | récupérer le code depuis GitHub et envoyer vos modifications | <https://git-scm.com/downloads> |
-| **GitHub CLI** (`gh`) | relier l’ordinateur à votre compte GitHub, sans mot de passe à taper | <https://cli.github.com> |
+| **GitHub CLI** (`gh`) — *inutile si Git est déjà connecté à GitHub sur ce PC* | relier l’ordinateur à votre compte GitHub, sans mot de passe à taper | <https://cli.github.com> |
 
 Installez-les dans cet ordre (suivant, suivant… en gardant les choix proposés).
 Sur Mac, si `git` manque, macOS propose d’installer les « outils de ligne de commande » : acceptez.
+
+**Sur Linux (Ubuntu, Debian…)**, tout s’installe dans le terminal (Ctrl + Alt + T) :
+
+```
+sudo apt update
+sudo apt install -y git curl
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt install -y nodejs
+sudo apt install -y gh        # seulement si Git n’est pas déjà connecté à GitHub
+```
+
+(Le paquet `nodejs` d’Ubuntu est trop ancien : la ligne `deb.nodesource.com` installe Node.js 22,
+la version minimale demandée par l’outil de Cloudflare. Si `sudo apt install -y gh` répond
+« Unable to locate package gh », utilisez le dépôt officiel de GitHub CLI :)
+
+```
+sudo mkdir -p -m 755 /etc/apt/keyrings
+curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo tee /etc/apt/keyrings/githubcli-archive-keyring.gpg > /dev/null
+sudo chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+sudo apt update && sudo apt install -y gh
+```
+
+> La commande GitHub s’appelle **`gh`** (et non `github`).
 
 > Prenez la version **LTS** de Node.js (stable, avec les correctifs de sécurité), pas « Current ».
 > Node.js ne sert que **sur votre PC** : il ne tourne pas sur le site en ligne
@@ -52,6 +76,9 @@ Sur Mac, si `git` manque, macOS propose d’installer les « outils de ligne de 
 - **Windows** : ouvrez le dossier **Documents** dans l’Explorateur, cliquez dans la barre d’adresse,
   tapez `cmd` puis Entrée.
 - **Mac** : ouvrez l’application **Terminal**, tapez `cd ~/Documents` puis Entrée.
+- **Linux** : ouvrez un terminal (Ctrl + Alt + T) : vous êtes dans votre dossier personnel, restez-y.
+  Évitez `/opt` ou d’autres dossiers système : ils appartiennent à `root` et `npm install` échouerait
+  (n’utilisez jamais `sudo npm`).
 
 Toutes les commandes se tapent dans ce terminal, **une par une**, suivies de Entrée.
 Vérifiez les installations (chaque commande doit afficher un numéro de version) :
@@ -62,8 +89,11 @@ git --version
 gh --version
 ```
 
-(`node -v` doit afficher `v22…` ou plus récent. Si une commande « n’est pas reconnue »,
+(`node -v` doit afficher `v22…` ou plus récent : l’outil de Cloudflare l’exige. Si une commande « n’est pas reconnue »,
 fermez puis rouvrez le terminal ; sinon réinstallez l’outil.)
+
+> **Git est déjà connecté à GitHub sur ce PC** (vous l’utilisez pour d’autres projets) ? Sautez les
+> étapes A3 et A4 (GitHub CLI est alors inutile) et passez directement à l’étape A5.
 
 ### Étape A3 — Vous présenter à Git (une seule fois)
 
@@ -102,7 +132,10 @@ git clone https://github.com/OriiT/Invitation_vodiondry.git
 cd Invitation_vodiondry
 ```
 
-Un dossier `Documents/Invitation_vodiondry` est créé avec tout le projet, relié au dépôt GitHub.
+Si vos autres projets utilisent **SSH** (`git remote -v` y affiche `git@github.com:…`), clonez de la
+même façon : `git clone git@github.com:OriiT/Invitation_vodiondry.git`.
+
+Un dossier `Invitation_vodiondry` est créé avec tout le projet, relié au dépôt GitHub.
 Vérifiez le lien avec le dépôt distant :
 
 ```
@@ -122,7 +155,7 @@ ne le montre même pas).
 
 **Pour rouvrir un terminal plus tard au bon endroit** : ouvrez le dossier `Invitation_vodiondry` dans
 l’Explorateur et tapez `cmd` dans la barre d’adresse (Windows), ou `cd ~/Documents/Invitation_vodiondry`
-dans Terminal (Mac).
+dans Terminal (Mac), ou `cd ~/Invitation_vodiondry` (Linux).
 
 > Sans Git, vous pouvez aussi faire **Code → Download ZIP** sur la page GitHub et décompresser :
 > tout fonctionne, mais vous ne pourrez ni envoyer de modification ni récupérer les mises à jour
@@ -446,6 +479,9 @@ Sans passer par le terminal, c’est aussi possible dans le tableau de bord Clou
 | Message / situation | Solution |
 |---|---|
 | `npm` ou `npx` « n’est pas reconnu » | Node.js n’est pas installé : voir <https://nodejs.org>, puis rouvrez le terminal. |
+| `Command 'github' not found` | La commande s’appelle `gh` : `gh auth login` (installation : étape A1). |
+| `Wrangler requires at least Node.js v22` | Node.js trop ancien : installez la version 22 ou plus (étape A1). |
+| `EACCES: permission denied` pendant `npm install` (Linux) | Le dossier appartient à `root` (ex. `/opt`) : clonez le projet dans votre dossier personnel (`cd ~` puis étape A5), sans `sudo`. |
 | `Not logged in` / `Authentication error` | `npx wrangler login` |
 | `database_id … 00000000…` ou `Couldn't find a D1 DB` | L’identifiant de l’étape B3 n’est pas collé dans `wrangler.toml`. |
 | `no such table: guests` | Étape B4 oubliée : `npx wrangler d1 migrations apply vodiondry --remote` |

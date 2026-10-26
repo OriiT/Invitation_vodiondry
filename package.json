@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "node scripts/predev.mjs && wrangler d1 migrations apply vodiondry --local && wrangler dev",
     "deploy": "wrangler d1 migrations apply vodiondry --remote && wrangler deploy",
