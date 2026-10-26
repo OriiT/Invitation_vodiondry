@@ -1,11 +1,11 @@
-# Jamais dans l'image : dépendances locales, état local, secrets, données personnelles.
+# Jamais dans l'image : dépendances locales, état local, secrets, données personnelles (à toute profondeur).
 .git
-node_modules
-.wrangler
-.dev.vars
-.env
-*.xlsx
-*.xls
-*.csv
+**/node_modules
+**/.wrangler
+**/.dev.vars
+**/.env
+**/*.xlsx
+**/*.xls
+**/*.csv
 donnees
 coverage

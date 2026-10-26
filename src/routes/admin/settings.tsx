@@ -35,8 +35,11 @@ const PW_WINDOW = 15 * 60_000;
 const EXAMPLE_NAME = 'Tante Lala';
 const EXAMPLE_CODE = 'exemple1';
 
-/** Commande pour revenir au mot de passe du secret ADMIN_PASSWORD (mot de passe oublié). */
-export const RESET_PASSWORD_COMMAND =
+/** Requête SQL qui ramène au mot de passe du secret ADMIN_PASSWORD (mot de passe oublié). */
+const RESET_PASSWORD_SQL = "DELETE FROM settings WHERE key = 'admin_password_hash';";
+
+/** Même chose en ligne de commande (depuis le dossier du projet). */
+const RESET_PASSWORD_COMMAND =
   `npx wrangler d1 execute vodiondry --remote --command "DELETE FROM settings WHERE key = 'admin_password_hash'"`;
 
 const OK_MESSAGES: Record<string, string> = {
@@ -349,15 +352,20 @@ const SettingsPage: FC<PageProps> = ({ csrf, origin, settings, values, errors = 
         </form>
         <div class="hint" style="margin-top:14px">
           <p style="margin:0 0 6px">
-            <strong>Mot de passe oublié ?</strong> Depuis le dossier du projet sur l’ordinateur, lancez la commande ci-dessous : le
-            mot de passe redevient celui du secret ADMIN_PASSWORD.
+            <strong>Mot de passe oublié ?</strong> Dans le tableau de bord Cloudflare (depuis un téléphone ou un ordinateur) :
+            <em>Storage &amp; Databases → D1 → vodiondry → Console</em>, exécutez la requête ci-dessous. Le mot de passe redevient
+            celui du secret ADMIN_PASSWORD (secret GitHub si la mise en ligne est automatique).
           </p>
+          <pre style="white-space:pre-wrap;overflow-wrap:anywhere;background:#f3efe8;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:0 0 8px;font-size:0.82rem">
+            <code>{RESET_PASSWORD_SQL}</code>
+          </pre>
+          <button type="button" class="btn btn-sm" data-copy={RESET_PASSWORD_SQL}>
+            Copier la requête
+          </button>
+          <p style="margin:10px 0 6px">En ligne de commande, depuis le dossier du projet :</p>
           <pre style="white-space:pre-wrap;overflow-wrap:anywhere;background:#f3efe8;border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:0 0 8px;font-size:0.82rem">
             <code>{RESET_PASSWORD_COMMAND}</code>
           </pre>
-          <button type="button" class="btn btn-sm" data-copy={RESET_PASSWORD_COMMAND}>
-            Copier la commande
-          </button>
         </div>
       </section>
     </Layout>
