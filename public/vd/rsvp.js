@@ -5,6 +5,28 @@
   'use strict';
   const D = window.VODIONDRY || { mode: 'generic' };
   const $ = (s) => document.querySelector(s);
+
+  // « Découvrir » (bas de la page 2) : simple indication dans le site d'origine, rendue cliquable
+  // (même apparence) → défilement doux jusqu'à la page suivante.
+  const cue = $('#sc2 .cue');
+  const nextPage = $('#sc3');
+  if (cue && nextPage) {
+    cue.classList.add('vd-cue');
+    cue.removeAttribute('aria-hidden');
+    cue.setAttribute('role', 'button');
+    cue.setAttribute('tabindex', '0');
+    cue.setAttribute('aria-label', 'Découvrir la suite de l’invitation');
+    const goNext = (e) => {
+      e.preventDefault();
+      const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+      nextPage.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+    };
+    cue.addEventListener('click', goNext);
+    cue.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') goNext(e);
+    });
+  }
+
   const yes = $('#rsvpYes');
   const no = $('#rsvpNo');
   const wrap = $('#t3wrap');

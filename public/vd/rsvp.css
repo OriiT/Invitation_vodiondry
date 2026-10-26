@@ -3,6 +3,11 @@
 
 .btn[hidden] { display: none !important; }
 
+/* « Découvrir » cliquable : même apparence, zone de toucher agrandie vers le haut (invisible). */
+.cue.vd-cue { pointer-events: auto; cursor: pointer; padding-top: 16px; -webkit-tap-highlight-color: transparent; }
+html.scrolled .cue.vd-cue { pointer-events: none; }
+.cue.vd-cue:focus-visible { outline: 2px solid #6b5744; outline-offset: 4px; border-radius: 8px; }
+
 /* Page générique : à la place des boutons Oui / Non */
 .vd-ask {
   left: 46.019%; top: 77.5%; width: 42.593%;

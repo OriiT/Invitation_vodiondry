@@ -269,15 +269,18 @@ Sur <https://github.com/OriiT/Invitation_vodiondry>, branche `main`, le dossier 
 doit contenir `deploy.yml`. S’il n’y est pas, une *pull request* l’apporte : onglet **Pull requests** →
 ouvrez-la → **Merge pull request** → **Confirm merge**.
 
-### Étape S1 — Compte Cloudflare et adresse `workers.dev`
+### Étape S1 — Compte Cloudflare et Account ID
 
-1. Créez un compte gratuit sur <https://dash.cloudflare.com/sign-up> et validez l’e-mail.
-2. Ouvrez **Workers & Pages** (menu de gauche, parfois sous *Compute*). Si Cloudflare vous propose de
-   **choisir votre sous-domaine `workers.dev`**, choisissez un nom court (ex. `orimbato-rojo`) ; sinon,
-   il est affiché à droite de cette page, avec un bouton pour le choisir ou le changer.
-   Votre adresse finale sera `https://vodiondry.orimbato-rojo.workers.dev`.
-3. Notez votre **Account ID** : affiché à droite de la même page, ou dans l’adresse du navigateur
-   (`dash.cloudflare.com/<account-id>/…`).
+1. Créez un compte gratuit sur <https://dash.cloudflare.com/sign-up> et validez l’e-mail. Si Cloudflare
+   pose des questions (site, domaine…), passez-les : aucun domaine n’est nécessaire.
+2. Ouvrez **Workers & Pages** (menu de gauche, parfois sous *Compute*). Sur un compte neuf, la page
+   propose surtout **Créer une application** : **n’y touchez pas**, GitHub créera l’application
+   `vodiondry` tout seul (étape S6).
+3. Notez votre **Account ID** : ce sont les 32 caractères de l’adresse du navigateur entre
+   `dash.cloudflare.com/` et le `/` suivant (ex. `https://dash.cloudflare.com/1a2b…6d/workers-and-pages`).
+
+L’adresse `https://vodiondry.<sous-domaine>.workers.dev` est créée automatiquement ; si la première mise
+en ligne réclame un sous-domaine, voir l’étape S6.
 
 ### Étape S2 — Créer la base de données
 
@@ -296,11 +299,20 @@ ouvrez-la → **Merge pull request** → **Confirm merge**.
 
 ### Étape S4 — Créer un jeton API Cloudflare
 
-1. Cloudflare → icône de profil en haut à droite → **My Profile → API Tokens → Create Token**.
-2. Modèle **Edit Cloudflare Workers** → **Use template**.
-3. Dans **Permissions**, **+ Add more** → **Account · D1 · Edit**.
-4. **Account Resources** : *Include · votre compte* ; **Zone Resources** : *Include · All zones*.
-5. **Continue to summary → Create Token**, puis **copiez le jeton** (il n’est affiché qu’une fois).
+1. Cloudflare → icône de profil en haut à droite → **My Profile → API Tokens → Create Token**
+   (selon l’interface, la page s’appelle **Account API tokens → Create a token** : c’est la même chose).
+2. Dans **Permission policies**, cliquez sur la carte **Edit Cloudflare Workers** (11 permissions).
+   Deux politiques s’affichent : *All zones … Workers Routes Write* et *Entire … Account … Workers KV
+   Storage Write, Workers Scripts Write, Account Settings Read +7 more*.
+3. Ajoutez l’accès à la base D1 : cliquez **+ Add policy**, choisissez le compte entier
+   (*Account* / *Entire account*), cherchez **D1** et cochez **D1 Write** (ou *D1 · Edit*), puis
+   validez. Une troisième politique contenant *D1 Write* apparaît. (Si *D1 Write* figure déjà dans le
+   détail « +7 more » de la 2ᵉ politique, inutile de l’ajouter.)
+4. **Token expiration** : **90 days** (le jeton expire ainsi tout seul après l’événement) ou
+   *No expiration*.
+5. **Client IP address filtering** : laissez vide (les machines de GitHub changent d’adresse).
+6. **Review token** → vérifiez les trois politiques → **Create token**.
+7. **Copiez le jeton** affiché : il ne s’affiche qu’une seule fois (secret GitHub `CLOUDFLARE_API_TOKEN`).
 
 ### Étape S5 — Donner les secrets à GitHub
 
@@ -310,7 +322,7 @@ quatre fois :
 | Name | Secret |
 |---|---|
 | `CLOUDFLARE_API_TOKEN` | le jeton de l’étape S4 |
-| `CLOUDFLARE_ACCOUNT_ID` | l’Account ID de l’étape S1 |
+| `CLOUDFLARE_ACCOUNT_ID` | l’Account ID de l’étape S1 (32 caractères) |
 | `ADMIN_PASSWORD` | le mot de passe de l’administration (au moins 10 caractères) |
 | `SESSION_SECRET` | une suite aléatoire d’au moins 32 caractères (générateur de mots de passe : 40 caractères, lettres et chiffres) |
 
@@ -325,7 +337,12 @@ Ces secrets ne sont jamais visibles dans le code ni dans les journaux, et GitHub
    **Publier le site** : elle affiche l’adresse `https://vodiondry.<votre-sous-domaine>.workers.dev`.
 4. Le site est en ligne à cette adresse (aussi visible dans Cloudflare → **Workers & Pages → vodiondry**).
 
-Si une étape est rouge ❌, cliquez dessus pour lire le message (voir aussi
+Si l’étape **Publier le site** échoue avec « You need to register a workers.dev subdomain » :
+Cloudflare → **Workers & Pages → Créer une application → Commencer avec Hello World! → Déployer**
+(cela crée votre adresse `….workers.dev`), puis supprimez cette application de test (ouvrez-la →
+**Paramètres → Supprimer**) et, sur GitHub, ouvrez le run rouge → **Re-run jobs → Re-run all jobs**.
+
+Si une autre étape est rouge ❌, cliquez dessus pour lire le message (voir aussi
 [En cas de problème](#6-en-cas-de-problème)). « Mise en ligne non configurée » signifie qu’il manque un
 secret (S5, avec exactement le bon nom), que `SESSION_SECRET` est trop court, ou que l’identifiant de la
 base n’est pas dans `wrangler.toml` (S3). Lors des mises à jour automatiques (sans *Run workflow*), ce
@@ -640,7 +657,7 @@ En ligne de commande, l’étape 3 correspond à `npx wrangler delete` puis
 
 | Message / situation | Solution |
 |---|---|
-| GitHub *Actions* : « You need to register a workers.dev subdomain » | Étape S1 : choisissez votre sous-domaine `workers.dev`, puis **Re-run jobs**. |
+| GitHub *Actions* : « You need to register a workers.dev subdomain » | Étape S6 : créez puis supprimez une application « Hello World » dans Workers & Pages, puis **Re-run jobs**. |
 | GitHub *Actions* : « Authentication error » ou « code: 10000 » | Le jeton n’a pas les bonnes permissions : refaites l’étape S4 (avec **D1 · Edit**) et remplacez le secret `CLOUDFLARE_API_TOKEN`. |
 | GitHub *Actions* : erreur sur l’étape « Mettre à jour les tables de la base D1 » (base introuvable, *database not found*) | Étapes S2-S3 : l’identifiant collé dans `wrangler.toml` doit être exactement le *Database ID* de la base. |
 | Pas de bouton **Run workflow** dans *Actions* | Le fichier `.github/workflows/deploy.yml` n’est pas encore sur `main` (étape S0 : fusionnez la *pull request*), ou `main` n’est pas la branche par défaut (**Settings → General → Default branch**). |
