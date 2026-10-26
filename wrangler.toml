@@ -14,7 +14,7 @@ run_worker_first = ["/", "/i/*", "/api/*", "/admin", "/admin/*"]
 binding = "DB"
 database_name = "vodiondry"
 # ⚠️ Remplacez la valeur ci-dessous par l'identifiant affiché par « npx wrangler d1 create vodiondry »
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "b817dcaf-9038-4498-a46a-84f120804ce2"
 migrations_dir = "migrations"
 
 [observability]
