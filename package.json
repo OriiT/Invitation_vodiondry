@@ -1,0 +1,29 @@
+{
+  "name": "vodiondry",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "node scripts/predev.mjs && wrangler d1 migrations apply vodiondry --local && wrangler dev",
+    "deploy": "wrangler d1 migrations apply vodiondry --remote && wrangler deploy",
+    "import": "tsx scripts/import.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "fflate": "^0.8.3",
+    "hono": "^4.13.13"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.4.7",
+    "@cloudflare/workers-types": "^5.20261024.1",
+    "sortablejs": "^1.15.7",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.12",
+    "wrangler": "^4.152.0"
+  }
+}

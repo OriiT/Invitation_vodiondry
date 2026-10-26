@@ -1,0 +1,91 @@
+/* Éléments ajoutés à l'invitation : texte « lien personnel » (page générique) et fenêtre de réponse.
+   Mêmes polices et couleurs que l'invitation (Cardo, Allura, Yeseva One, Cinzel ; brun #6B4E36). */
+
+.btn[hidden] { display: none !important; }
+
+/* Page générique : à la place des boutons Oui / Non */
+.vd-ask {
+  left: 46.019%; top: 77.5%; width: 42.593%;
+  font-size: calc(var(--u) * 2.13); font-weight: 700; line-height: 1.4;
+  white-space: normal; text-align: left; color: var(--ink);
+}
+
+/* Phrase de la carte « Réponse » longue (nom de famille ou de table long) : un peu plus petite, pour rester
+   au-dessus de l'ornement du bas de la carte (la taille d'origine est posée en ligne : !important). */
+.vd-long { font-size: calc(var(--u) * 1.85) !important; }
+.vd-longer { font-size: calc(var(--u) * 1.6) !important; }
+
+/* Messages ajoutés (lien invalide, réponses closes) plus longs que celui du site : retour à la ligne au lieu de
+   déborder de l'écran. « width: max-content » : sinon, avec left: 50 %, la largeur serait limitée à 50 vw. */
+.toast {
+  white-space: normal; width: max-content; max-width: calc(100vw - 32px);
+  text-align: center; line-height: 1.4; border-radius: 18px;
+}
+
+/* ---- fenêtre de réponse */
+html.vd-lock, html.vd-lock body { overflow: hidden; }
+.vd-back {
+  position: fixed; inset: 0; z-index: 80; display: none;
+  align-items: flex-end; justify-content: center;
+  background: rgba(41, 41, 41, 0); transition: background-color .32s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.vd-back.on { display: flex; }
+.vd-back.show { background: rgba(41, 41, 41, .42); }
+.vd-sheet {
+  position: relative; width: min(520px, 100%); max-height: calc(100svh - 16px); overflow-y: auto; overscroll-behavior: contain;
+  padding: 12px 22px calc(22px + env(safe-area-inset-bottom, 0px));
+  background: #f7f2eb linear-gradient(180deg, #fbf8f3 0%, #f3ece2 100%);
+  border-radius: 26px 26px 0 0; box-shadow: 0 -12px 40px rgba(60, 40, 20, .22);
+  color: var(--ink); font-family: var(--cardo); text-align: center;
+  transform: translateY(104%); transition: transform .34s cubic-bezier(.2, .7, .25, 1);
+}
+.vd-back.show .vd-sheet { transform: none; }
+@media (min-width: 640px) and (min-height: 640px) {
+  .vd-back { align-items: center; }
+  .vd-sheet { border-radius: 26px; padding-bottom: 26px; transform: translateY(24px); opacity: 0; transition: transform .34s cubic-bezier(.2, .7, .25, 1), opacity .25s ease; }
+  .vd-back.show .vd-sheet { opacity: 1; }
+  .vd-grip { display: none !important; }
+}
+.vd-sheet [hidden] { display: none !important; }
+.vd-grip { display: block; width: 42px; height: 4px; margin: 0 auto 6px; border-radius: 4px; background: #d3c6b4; }
+.vd-title { margin: 4px 0 0; font-family: var(--script); font-weight: 400; font-size: 46px; line-height: 1.15; color: #6b4e36; }
+.vd-lead { margin: 2px 0 18px; font-style: italic; font-size: 17px; line-height: 1.4; color: #5b4a3b; }
+.vd-form { margin: 0; }
+
+.vd-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border: 1.5px solid var(--ink); border-radius: 999px; }
+.vd-seg-b, .vd-btn, .vd-step {
+  font-family: var(--cardo); font-weight: 700; color: var(--ink); background: transparent; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; -webkit-appearance: none; appearance: none;
+}
+.vd-seg-b { min-height: 44px; border: 0; border-radius: 999px; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; transition: background-color .25s, color .25s; }
+.vd-seg-b[aria-checked="true"] { background: #6b4e36; color: #fff; }
+
+.vd-q { margin: 22px 0 10px; font-size: 14px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.vd-stepper { display: flex; align-items: center; justify-content: center; gap: 24px; }
+.vd-step { width: 50px; height: 50px; border: 1.5px solid var(--ink); border-radius: 50%; font-size: 26px; line-height: 1; padding: 0 0 3px; }
+.vd-step:disabled { opacity: .25; cursor: default; }
+.vd-numbox { display: flex; flex-direction: column; align-items: center; min-width: 96px; }
+.vd-num { font-family: var(--yeseva); font-size: 46px; line-height: 1; font-variant-numeric: lining-nums tabular-nums; }
+.vd-unit { margin-top: 6px; font-family: var(--cinzel); font-weight: 700; font-size: 11px; letter-spacing: .18em; padding-left: .18em; text-transform: uppercase; }
+
+.vd-hint { margin: 12px 0 0; font-style: italic; font-size: 15px; color: #6f5d4c; }
+.vd-label { display: block; margin: 22px 0 8px; font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #5b4a3b; }
+.vd-msg {
+  display: block; width: 100%; min-height: 84px; padding: 12px 14px; resize: vertical;
+  font-family: var(--cardo); font-size: 17px; line-height: 1.4; color: var(--ink); text-align: left;
+  background: rgba(255, 255, 255, .75); border: 1px solid rgba(41, 41, 41, .22); border-radius: 16px;
+}
+.vd-msg:focus { outline: 2px solid #6b4e36; outline-offset: 1px; }
+.vd-err { min-height: 1.2em; margin: 10px 0 0; font-family: var(--poppins); font-size: 13px; color: #9b2d22; }
+.vd-err:empty { min-height: 0; margin: 0; }
+.vd-actions { display: grid; grid-template-columns: 1fr 1.5fr; gap: 10px; margin-top: 18px; }
+.vd-btn { min-height: 50px; padding: 0 14px; border: 1.5px solid var(--ink); border-radius: 999px; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; }
+.vd-fill { background: #6b4e36; border-color: #6b4e36; color: #fff; }
+.vd-btn:disabled { opacity: .6; }
+.vd-seg-b:focus-visible, .vd-btn:focus-visible, .vd-step:focus-visible { outline: 2px solid #6b4e36; outline-offset: 2px; }
+.vd-btn:active, .vd-step:active, .vd-seg-b:active { opacity: .75; }
+
+@media (prefers-reduced-motion: reduce) {
+  .vd-back, .vd-sheet, .vd-seg-b { transition: none !important; }
+}
