@@ -16,21 +16,25 @@ Petite application web pour le **vodiondry du samedi 19 décembre 2026**
 
 ## Sommaire
 
-1. [Sur votre PC : installer et essayer en local](#1-sur-votre-pc--installer-et-essayer-en-local) (≈ 15 minutes)
-2. [Mise en ligne sur Cloudflare](#2-mise-en-ligne-sur-cloudflare) (≈ 20 minutes, une seule fois)
-3. [Utilisation au quotidien](#3-utilisation-au-quotidien)
-4. [Tout supprimer après le 19 décembre](#4-tout-supprimer-après-le-19-décembre)
-5. [En cas de problème](#5-en-cas-de-problème)
-6. [Questions fréquentes](#6-questions-fréquentes) (Node.js, proxys d’entreprise, Madagascar, nom de domaine)
-7. [Pour les curieux : fonctionnement](#7-pour-les-curieux--fonctionnement)
+1. [Sur votre PC ou votre serveur : essai en local](#1-sur-votre-pc-ou-votre-serveur--essai-en-local) (Node.js ou Docker, facultatif)
+2. [Mise en ligne sans serveur — recommandé](#2-mise-en-ligne-sans-serveur--recommandé) (≈ 20 minutes, tout dans le navigateur)
+3. [Mise en ligne depuis un terminal — autre méthode](#3-mise-en-ligne-depuis-un-terminal--autre-méthode)
+4. [Utilisation au quotidien](#4-utilisation-au-quotidien)
+5. [Tout supprimer après le 19 décembre](#5-tout-supprimer-après-le-19-décembre)
+6. [En cas de problème](#6-en-cas-de-problème)
+7. [Questions fréquentes](#7-questions-fréquentes) (serveur en panne, Node.js, proxys d’entreprise, Madagascar, nom de domaine)
+8. [Pour les curieux : fonctionnement](#8-pour-les-curieux--fonctionnement)
 
 ---
 
-## 1. Sur votre PC : installer et essayer en local
+## 1. Sur votre PC ou votre serveur : essai en local
 
-Cette partie installe le projet sur votre ordinateur, le relie au dépôt GitHub et le fait tourner
-**uniquement chez vous** (rien n’est encore en ligne). C’est aussi depuis ce PC que vous mettrez le site
-en ligne à la partie 2.
+Cette partie installe le projet sur votre ordinateur (ou votre serveur), le relie au dépôt GitHub et
+le fait tourner **uniquement chez vous**, pour l’essayer. Elle est **facultative** : la mise en ligne
+sans serveur (partie 2) se fait entièrement dans le navigateur.
+
+Deux façons de lancer l’essai : avec **Node.js** (étapes A1 à A8) ou avec **Docker**, sans installer
+Node.js (étapes A1 à A5, puis [variante Docker](#variante-docker--sans-installer-nodejs)).
 
 ### Étape A1 — Installer les trois outils
 
@@ -69,7 +73,7 @@ sudo apt update && sudo apt install -y gh
 
 > Prenez la version **LTS** de Node.js (stable, avec les correctifs de sécurité), pas « Current ».
 > Node.js ne sert que **sur votre PC** : il ne tourne pas sur le site en ligne
-> (voir [Questions fréquentes](#6-questions-fréquentes)).
+> (voir [Questions fréquentes](#7-questions-fréquentes)).
 
 ### Étape A2 — Ouvrir un terminal
 
@@ -161,6 +165,39 @@ dans Terminal (Mac), ou `cd ~/Invitation_vodiondry` (Linux).
 > tout fonctionne, mais vous ne pourrez ni envoyer de modification ni récupérer les mises à jour
 > avec `git pull`.
 
+### Variante Docker — sans installer Node.js
+
+À la place des étapes A6 à A8, si Docker et Docker Compose sont installés (par exemple sur un serveur
+sans écran). Dans le dossier du projet :
+
+```
+docker compose up --build -d dev
+docker compose logs -f dev
+```
+
+Attendez la ligne `Ready on http://0.0.0.0:8787` (puis **Ctrl + C** pour quitter l’affichage : le site
+continue de tourner). Depuis un autre appareil du même réseau, ouvrez :
+
+- `http://<adresse-du-serveur>:8787` : l’invitation (ex. `http://192.168.1.15:8787`) ;
+- `http://<adresse-du-serveur>:8787/admin` : l’administration (mot de passe local : **`admin-local`**).
+
+Pour essayer avec la vraie liste : **/admin → Import / export** → `Budget_reception_5.xlsx`.
+
+| Action | Commande |
+|---|---|
+| Arrêter | `docker compose down` (les données d’essai restent dans un volume Docker) |
+| Effacer les données d’essai | `docker compose down -v` |
+| Après un `git pull` | `docker compose up --build -d dev` |
+| Pare-feu Ubuntu qui bloque | `sudo ufw allow 8787/tcp` |
+
+Commandes Cloudflare depuis Docker (facultatif, pour la partie 3) : copiez `.env.example` en `.env`,
+renseignez-y le jeton et l’Account ID (étape S4), puis par exemple
+`docker compose run --rm cli npx wrangler whoami`. Pour importer la liste en ligne depuis le serveur,
+placez le fichier dans le dossier `donnees/` puis :
+`docker compose run --rm cli npm run import -- donnees/Budget_reception_5.xlsx --dry-run`
+(et sans `--dry-run` pour importer). Le fichier `.env` et le dossier `donnees/` ne sont jamais envoyés
+sur GitHub ni copiés dans l’image.
+
 ### Étape A6 — Installer les outils du projet (une seule fois, 1 à 2 minutes)
 
 ```
@@ -195,7 +232,106 @@ Pour arrêter le site local : dans le premier terminal, **Ctrl + C**.
 
 ---
 
-## 2. Mise en ligne sur Cloudflare
+## 2. Mise en ligne sans serveur — recommandé
+
+Tout se fait **dans le navigateur** (ordinateur ou téléphone), sur les sites de Cloudflare et de GitHub.
+Ensuite :
+
+- le site, la base de données et l’administration tournent **chez Cloudflare** : ils fonctionnent même
+  si votre PC ou votre serveur est éteint ou en panne ;
+- chaque modification de la branche `main` sur GitHub est **testée puis mise en ligne
+  automatiquement** par GitHub (onglet *Actions*) : aucun serveur personnel n’est nécessaire,
+  même pour les mises à jour.
+
+Coût : **0 €** (offres gratuites de Cloudflare et de GitHub).
+
+### Étape S1 — Compte Cloudflare et adresse `workers.dev`
+
+1. Créez un compte gratuit sur <https://dash.cloudflare.com/sign-up> et validez l’e-mail.
+2. Ouvrez **Workers & Pages** (menu de gauche, parfois sous *Compute*). Si Cloudflare vous propose de
+   **choisir votre sous-domaine `workers.dev`**, choisissez un nom court (ex. `orimbato-rojo`) ; sinon,
+   il est affiché à droite de cette page, avec un bouton pour le choisir ou le changer.
+   Votre adresse finale sera `https://vodiondry.orimbato-rojo.workers.dev`.
+3. Notez votre **Account ID** : affiché à droite de la même page, ou dans l’adresse du navigateur
+   (`dash.cloudflare.com/<account-id>/…`).
+
+### Étape S2 — Créer la base de données
+
+1. Menu **Storage & Databases → D1 SQL Database → Create** (ou *Create database*).
+2. Nom : **`vodiondry`** (exactement) → **Create**.
+3. Copiez le **Database ID** affiché (de la forme `8c1f2a4e-1234-4abc-9def-0123456789ab`).
+
+### Étape S3 — Coller l’identifiant de la base dans `wrangler.toml`, sur GitHub
+
+1. Sur <https://github.com/OriiT/Invitation_vodiondry> (branche `main`), ouvrez le fichier
+   `wrangler.toml` puis cliquez sur le crayon (*Edit this file*).
+2. Remplacez `00000000-0000-0000-0000-000000000000` par votre identifiant (gardez les guillemets).
+3. **Commit changes…** → *Commit directly to the `main` branch* → **Commit changes**.
+
+(L’identifiant n’est pas un secret : sans accès à votre compte Cloudflare, il ne permet rien.)
+
+### Étape S4 — Créer un jeton API Cloudflare
+
+1. Cloudflare → icône de profil en haut à droite → **My Profile → API Tokens → Create Token**.
+2. Modèle **Edit Cloudflare Workers** → **Use template**.
+3. Dans **Permissions**, **+ Add more** → **Account · D1 · Edit**.
+4. **Account Resources** : *Include · votre compte* (laissez le reste tel quel).
+5. **Continue to summary → Create Token**, puis **copiez le jeton** (il n’est affiché qu’une fois).
+
+### Étape S5 — Donner les secrets à GitHub
+
+Sur GitHub : dépôt → **Settings → Secrets and variables → Actions → New repository secret**,
+quatre fois :
+
+| Name | Secret |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | le jeton de l’étape S4 |
+| `CLOUDFLARE_ACCOUNT_ID` | l’Account ID de l’étape S1 |
+| `ADMIN_PASSWORD` | le mot de passe de l’administration (au moins 10 caractères) |
+| `SESSION_SECRET` | une suite aléatoire d’au moins 32 caractères (générateur de mots de passe : 40 caractères, lettres et chiffres) |
+
+Ces secrets ne sont jamais visibles dans le code ni dans les journaux, et GitHub ne les réaffiche plus.
+
+### Étape S6 — Lancer la mise en ligne
+
+1. Vérifiez que `main` est la branche par défaut : **Settings → General → Default branch → `main`**.
+2. Onglet **Actions** → **Tests et mise en ligne** → **Run workflow** → branche `main` → **Run workflow**.
+3. Attendez 2 à 4 minutes : *Tests* puis *Mise en ligne sur Cloudflare* passent au vert ✅.
+4. Le site est en ligne à `https://vodiondry.<votre-sous-domaine>.workers.dev` (adresse aussi visible
+   dans Cloudflare → **Workers & Pages → vodiondry**).
+
+Si une étape est rouge ❌, cliquez dessus pour lire le message : voir aussi
+[En cas de problème](#6-en-cas-de-problème). Si *Mise en ligne* est simplement sautée avec le message
+« Mise en ligne non configurée », il manque un secret (S5) ou l’identifiant de la base (S3).
+
+### Étape S7 — Importer la liste et vérifier
+
+1. Ouvrez `https://vodiondry.<votre-sous-domaine>.workers.dev/admin` et connectez-vous (mot de passe S5).
+2. **Import / export** → choisissez `Budget_reception_5.xlsx` → **Importer** :
+   33 invités, 76 personnes (3 lignes ignorées). L’import peut être relancé sans créer de doublons.
+3. **Voir** sur un invité : son prénom apparaît sur la carte « Réponse ».
+4. Envoyez-vous un **WhatsApp** de test, ouvrez-le sur votre téléphone en 4G et répondez ; remettez
+   ensuite la bonne réponse depuis la fiche de l’invité.
+5. Envoyez les invitations (boutons **WhatsApp**). 🎉
+
+### Ensuite : mises à jour automatiques
+
+Toute modification fusionnée dans `main` (par exemple une *pull request*) est testée puis mise en ligne
+toute seule. Si les tests échouent, rien n’est publié : le site garde la version précédente.
+Les invités, réponses et réglages en ligne sont toujours conservés.
+
+---
+
+## 3. Mise en ligne depuis un terminal — autre méthode
+
+À utiliser seulement si vous ne voulez pas de la mise en ligne sans serveur (partie 2) : chaque mise
+à jour devra alors être publiée depuis votre PC avec `npm run deploy`.
+
+> **Serveur sans écran** : `npx wrangler login` (étape B2) a besoin d’un navigateur sur la machine.
+> Remplacez-le par le jeton de l’étape S4 :
+> `export CLOUDFLARE_API_TOKEN="…"` et `export CLOUDFLARE_ACCOUNT_ID="…"` (vérification :
+> `npx wrangler whoami`), ou utilisez les commandes Docker `docker compose run --rm cli …`
+> ([variante Docker](#variante-docker--sans-installer-nodejs)).
 
 Toujours depuis le terminal ouvert dans le dossier du projet.
 
@@ -348,21 +484,14 @@ C’est en ligne. 🎉
 
 Voir [Questions fréquentes → un nom de domaine à soi](#un-nom-de-domaine-à-soi-facultatif-environ-10--par-an).
 
-### Étape B10 (facultative) — Relier Cloudflare au dépôt GitHub (mise en ligne automatique)
+### Étape B10 (facultative) — Mise en ligne automatique
 
-Sans cette étape, chaque mise à jour se publie depuis le PC avec `npm run deploy`. Avec elle,
-Cloudflare republie le site tout seul à chaque modification de la branche `main` sur GitHub :
-
-1. Tableau de bord Cloudflare → **Workers & Pages → vodiondry → Settings → Build** → **Connect**.
-2. Choisissez **GitHub**, autorisez l’application Cloudflare sur le dépôt `OriiT/Invitation_vodiondry`.
-3. Branche : `main` ; commande de build : laissez vide ; commande de déploiement : `npm run deploy`.
-4. Enregistrez. Les publications apparaissent dans l’onglet **Deployments**.
-
-Prérequis : l’identifiant de la base doit être sur GitHub (étape B3, point 5).
+Pour que GitHub publie le site tout seul à chaque mise à jour, faites les étapes S4 à S6 de la
+partie 2 (jeton API, secrets GitHub, *Run workflow*).
 
 ---
 
-## 3. Utilisation au quotidien
+## 4. Utilisation au quotidien
 
 Tout se fait depuis `/admin`, aussi bien sur téléphone que sur ordinateur.
 
@@ -431,8 +560,10 @@ changement du mot de passe de l’administration.
 
 ### Récupérer une mise à jour du code
 
-Si le code change sur GitHub (correction, nouvelle fonction), dans le terminal ouvert dans le dossier
-`Invitation_vodiondry` :
+Avec la mise en ligne sans serveur (partie 2), **il n’y a rien à faire** : toute modification de `main`
+est publiée automatiquement. Les commandes ci-dessous ne servent qu’à mettre à jour votre copie locale
+(essai en local) ou, avec la méthode de la partie 3, à publier depuis le PC. Dans le terminal ouvert
+dans le dossier du projet :
 
 ```
 git pull
@@ -441,13 +572,17 @@ npm run deploy
 ```
 
 `git pull` récupère les modifications du dépôt distant ; `npm run deploy` les met en ligne
-(inutile si l’étape B10 est faite). Les invités, réponses et réglages en ligne sont conservés.
+(inutile avec la mise en ligne automatique). Les invités, réponses et réglages en ligne sont conservés.
 
 ---
 
-## 4. Tout supprimer après le 19 décembre
+## 5. Tout supprimer après le 19 décembre
 
 1. (Facultatif) Gardez un souvenir : **/admin → Import / export → Exporter (CSV)**.
+1. Si vous utilisez la mise en ligne automatique (partie 2) : GitHub → **Actions → Tests et mise en
+   ligne → ⋯ → Disable workflow** (sinon une future modification de `main` recréerait le site), puis
+   **Settings → Secrets and variables → Actions** : supprimez les quatre secrets. Côté Cloudflare,
+   **My Profile → API Tokens** : supprimez le jeton.
 2. Dans le terminal, dans le dossier du projet :
 
    ```
@@ -474,10 +609,14 @@ Sans passer par le terminal, c’est aussi possible dans le tableau de bord Clou
 
 ---
 
-## 5. En cas de problème
+## 6. En cas de problème
 
 | Message / situation | Solution |
 |---|---|
+| GitHub *Actions* : « You need to register a workers.dev subdomain » | Étape S1 : choisissez votre sous-domaine `workers.dev`, puis **Re-run jobs**. |
+| GitHub *Actions* : « Authentication error » ou « code: 10000 » | Le jeton n’a pas les bonnes permissions : refaites l’étape S4 (avec **D1 · Edit**) et remplacez le secret `CLOUDFLARE_API_TOKEN`. |
+| GitHub *Actions* : « Couldn't find a D1 DB » | Étapes S2-S3 : la base doit s’appeler `vodiondry` et son identifiant être collé dans `wrangler.toml`. |
+| Pas de bouton **Run workflow** dans *Actions* | `main` n’est pas la branche par défaut : **Settings → General → Default branch**. |
 | `npm` ou `npx` « n’est pas reconnu » | Node.js n’est pas installé : voir <https://nodejs.org>, puis rouvrez le terminal. |
 | `Command 'github' not found` | La commande s’appelle `gh` : `gh auth login` (installation : étape A1). |
 | `Wrangler requires at least Node.js v22` | Node.js trop ancien : installez la version 22 ou plus (étape A1). |
@@ -492,18 +631,31 @@ Sans passer par le terminal, c’est aussi possible dans le tableau de bord Clou
 | Modifier le site après coup | `git pull` puis `npm run deploy` (les données sont conservées). |
 | `git push` refusé (`Authentication failed`, `403`) | `gh auth login` (étape A4), puis `gh auth status` doit afficher « Logged in ». |
 | `git pull` refuse à cause de « local changes » sur `wrangler.toml` | Envoyez d’abord votre modification (étape B3, point 5), puis refaites `git pull`. |
-| Un invité n’arrive pas à ouvrir le lien depuis le réseau de son entreprise | Qu’il l’ouvre sur son téléphone en 4G ; voir aussi [Questions fréquentes](#6-questions-fréquentes). |
+| Un invité n’arrive pas à ouvrir le lien depuis le réseau de son entreprise | Qu’il l’ouvre sur son téléphone en 4G ; voir aussi [Questions fréquentes](#7-questions-fréquentes). |
 
 ---
 
-## 6. Questions fréquentes
+## 7. Questions fréquentes
+
+### Et si mon PC ou mon serveur tombe en panne ?
+
+Rien ne change pour les invités ni pour vous :
+
+- le **site**, la **base de données** et l’**administration** tournent chez **Cloudflare** ;
+- le **code** est sur **GitHub**, et les mises à jour y sont testées puis publiées (partie 2) ;
+- votre PC ou votre serveur ne sert qu’à l’essai en local (partie 1), facultatif.
+
+Vous pouvez tout gérer depuis un téléphone. Par précaution, exportez de temps en temps le CSV
+(**Import / export → Exporter**) ; Cloudflare garde aussi un historique de la base de 7 jours
+(*Time Travel*, offre gratuite) qui permet de revenir en arrière en cas d’erreur.
 
 ### Pourquoi Node.js ? Pourquoi pas Nuxt ?
 
 - **Le site en ligne n’utilise pas Node.js.** Il tourne chez Cloudflare (Workers), sur leur propre
   moteur, mis à jour et protégé par Cloudflare. Rien de Node.js n’est exposé sur Internet.
-- **Node.js ne sert que sur votre PC**, quelques minutes, pour lancer `wrangler` (l’outil officiel de
-  Cloudflare pour publier un site, qui est lui-même un programme Node.js), `npm install` et les tests.
+- **Node.js ne sert que pour les outils** : sur votre PC pour l’essai local (ou dans Docker, sans
+  l’installer), et chez GitHub pour les tests et la publication automatique (partie 2). Il lance
+  `wrangler`, l’outil officiel de Cloudflare, qui est lui-même un programme Node.js.
   `npm run dev` n’écoute que sur votre propre ordinateur (`localhost`).
 - **Nuxt ne supprimerait pas Node.js** : Nuxt est un framework Vue qui a lui aussi besoin de Node.js
   pour être développé et construit, et Cloudflare demande de toute façon `wrangler`. Nuxt ajouterait
@@ -549,7 +701,7 @@ Faites ce choix **avant** d’envoyer les invitations : les liens déjà envoyé
 
 ---
 
-## 7. Pour les curieux : fonctionnement
+## 8. Pour les curieux : fonctionnement
 
 ### Architecture
 

@@ -1,0 +1,32 @@
+# Outils Docker (facultatifs) : le site en ligne est hébergé par Cloudflare et ne dépend pas de cette machine.
+#
+#   docker compose up --build dev
+#       → essai local sur http://<ip-du-serveur>:8787 (admin : /admin, mot de passe « admin-local »)
+#   docker compose run --rm cli npx wrangler whoami
+#       → commandes Cloudflare ; jeton dans le fichier .env (voir .env.example)
+#   docker compose run --rm cli npm run import -- donnees/Budget_reception_5.xlsx --dry-run
+#       → import en ligne depuis le dossier ./donnees (fichiers jamais copiés dans l'image)
+
+services:
+  dev:
+    build: .
+    image: vodiondry-outils
+    ports:
+      - "8787:8787"
+    volumes:
+      - vodiondry-local:/app/.wrangler
+
+  cli:
+    build: .
+    image: vodiondry-outils
+    profiles: ["cli"]
+    environment:
+      CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN:-}
+      CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID:-}
+    volumes:
+      - ./wrangler.toml:/app/wrangler.toml:ro
+      - ./donnees:/app/donnees:ro
+    command: ["npx", "wrangler", "--version"]
+
+volumes:
+  vodiondry-local:
