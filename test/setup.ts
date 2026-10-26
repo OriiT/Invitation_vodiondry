@@ -13,5 +13,6 @@ beforeEach(async () => {
     env.DB.prepare('DELETE FROM tables'),
     env.DB.prepare('DELETE FROM settings'),
     env.DB.prepare('DELETE FROM former_names'),
+    env.DB.prepare('DELETE FROM budget_items'),
   ]);
 });

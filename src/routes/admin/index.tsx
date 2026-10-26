@@ -14,6 +14,7 @@ import {
 } from '../../lib/auth';
 import { clientIp, rateLimit, releaseHit } from '../../lib/ratelimit';
 import { Layout } from '../../views/layout';
+import budget from './budget';
 import guests from './guests';
 import settings from './settings';
 import tables from './tables';
@@ -130,6 +131,7 @@ admin.post('/logout', (c) => {
 });
 
 admin.route('/tables', tables);
+admin.route('/budget', budget);
 admin.route('/settings', settings);
 admin.route('/', guests);
 

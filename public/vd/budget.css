@@ -1,0 +1,77 @@
+/* Budget : trois scénarios, personnes hors liste, postes « par personne » et « forfaits ». */
+
+.bg-intro { margin: -4px 0 14px; font-size: 0.92rem; }
+
+/* ---- scénarios (côte à côte, empilés sur téléphone) */
+.bg-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
+@media (max-width: 760px) { .bg-tiles { grid-template-columns: minmax(0, 1fr); gap: 10px; } }
+.bg-tile {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; min-width: 0;
+}
+.bg-tile p { margin: 0; }
+.bg-tile-t {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px;
+  margin: 0 0 2px; font-size: 0.95rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em;
+}
+.bg-badge { text-transform: none; letter-spacing: 0; background: var(--brown); color: #fff; }
+.bg-total {
+  font-size: 1.85rem; font-weight: 700; line-height: 1.15; color: var(--ink);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.bg-people { font-size: 0.95rem; font-variant-numeric: tabular-nums; }
+.bg-people b { font-weight: 700; }
+.bg-tile .hint { margin-top: 6px; }
+.bg-tile.is-main { border: 2px solid var(--brown); background: #fffaf3; padding: 13px 15px; }
+.bg-tile.is-main .bg-tile-t { color: var(--brown); }
+.bg-tile.is-main .bg-total { color: var(--brown); }
+@media (max-width: 380px) { .bg-total { font-size: 1.6rem; } }
+
+.bg-formula {
+  margin: 0 0 16px; padding: 10px 14px; border-radius: 10px; background: #f1ebe3; color: var(--ink);
+  font-size: 0.92rem; font-variant-numeric: tabular-nums;
+}
+
+/* ---- personnes hors liste */
+.bg-extra h2 { margin-bottom: 10px; }
+.bg-extra-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 12px; margin: 0 0 6px; }
+.bg-extra-form .field { width: 170px; }
+.bg-extra .hint { margin: 6px 0 0; }
+
+/* ---- tableaux des postes */
+.bg-section { margin-bottom: 20px; }
+.bg-section-t { margin: 4px 0 10px; }
+.bg-section-sub { font-weight: 400; font-size: 0.9rem; }
+.bg-label { font-weight: 700; overflow-wrap: anywhere; }
+table.bg-table td.num, table.bg-table th.num { white-space: nowrap; font-variant-numeric: tabular-nums; }
+table.bg-table th { vertical-align: bottom; }
+.bg-th-sub { display: block; font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 0.78rem; }
+table.bg-table td.cell-title { min-width: 220px; }
+table.bg-table .bg-col-main { background: #fffaf3; }
+table.bg-table td.bg-col-main { font-weight: 600; }
+table.bg-table tfoot td { font-weight: 700; background: #fbf8f4; border-top: 2px solid var(--line); border-bottom: 0; }
+table.bg-table tfoot td.bg-col-main { background: #f8efe2; }
+table.bg-table td.cell-actions { width: 1%; white-space: nowrap; }
+table.bg-table td.cell-actions .actions { flex-wrap: nowrap; }
+table.bg-table tr:target td { background: #fdf3d8; }
+table.bg-table-ff td.num { width: 1%; }
+
+@media (max-width: 760px) {
+  /* Libellé et montant alignés sur la même ligne de base (montants plus grands que les libellés). */
+  table.data.bg-table td { align-items: baseline; }
+  table.data.bg-table tfoot { display: block; width: 100%; }
+  table.data.bg-table tfoot tr { background: #fbf8f4; border-width: 2px; }
+  table.data.bg-table tfoot td { background: transparent; border-top: 0; }
+  table.data.bg-table tfoot td.cell-title { font-size: 1rem; }
+  table.bg-table td.cell-title { min-width: 0; }
+  table.bg-table td.cell-actions { width: 100%; }
+  table.bg-table-ff td.num { width: 100%; }
+  table.bg-table .bg-col-main, table.bg-table tfoot td.bg-col-main { background: #fffaf3; }
+  table.bg-table td.bg-empty { justify-content: flex-start; text-align: left; }
+  table.bg-table tr:target { border-color: #e7c66f; background: #fdf3d8; }
+  table.bg-table tr:target td { background: transparent; }
+}
+
+/* ---- formulaire d'un frais */
+textarea.bg-detail { min-height: 0; } /* hauteur : 3 lignes (rows) */
+.bg-edit-was { margin: 0 0 12px; overflow-wrap: anywhere; }

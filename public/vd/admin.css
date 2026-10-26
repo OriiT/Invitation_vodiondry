@@ -215,3 +215,6 @@ table.sample th { background: #fbf8f4; color: var(--muted); font-weight: 600; te
   .kv { grid-template-columns: 1fr; gap: 2px; }
   .kv dd { margin-bottom: 8px; }
 }
+
+/* Message d'erreur d'un champ : rouge, même placé dans un .field (dont les <span> sont gris par défaut). */
+.field > .field-error { color: var(--no); }

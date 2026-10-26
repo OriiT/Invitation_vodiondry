@@ -3,12 +3,13 @@
 import { raw } from 'hono/html';
 import type { Child, FC } from 'hono/jsx';
 
-export type NavKey = 'guests' | 'reminders' | 'import' | 'tables' | 'settings';
+export type NavKey = 'guests' | 'reminders' | 'import' | 'tables' | 'budget' | 'settings';
 
 const NAV: { key: NavKey; href: string; label: string }[] = [
   { key: 'guests', href: '/admin', label: 'Invités' },
   { key: 'reminders', href: '/admin/relances', label: 'Relances' },
   { key: 'tables', href: '/admin/tables', label: 'Plan de table' },
+  { key: 'budget', href: '/admin/budget', label: 'Budget' },
   { key: 'import', href: '/admin/import', label: 'Import / export' },
   { key: 'settings', href: '/admin/settings', label: 'Réglages' },
 ];
