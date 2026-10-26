@@ -56,6 +56,13 @@ table.bg-table td.cell-actions .actions { flex-wrap: nowrap; }
 table.bg-table tr:target td { background: #fdf3d8; }
 table.bg-table-ff td.num { width: 1%; }
 
+/* Tablette (entre le mode cartes et l'écran large) : colonne « Poste » rétrécissable et boutons empilés, pour que
+   Modifier / Supprimer restent visibles sans faire défiler le tableau. */
+@media (min-width: 761px) and (max-width: 960px) {
+  table.bg-table td.cell-title { min-width: 0; }
+  table.bg-table td.cell-actions .actions { flex-wrap: wrap; }
+}
+
 @media (max-width: 760px) {
   /* Libellé et montant alignés sur la même ligne de base (montants plus grands que les libellés). */
   table.data.bg-table td { align-items: baseline; }

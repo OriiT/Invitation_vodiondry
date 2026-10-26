@@ -618,15 +618,16 @@ d’invités : le budget se met à jour tout seul quand les réponses arrivent.
 - **Total** = forfaits + (montants par personne × nombre de personnes). Les **forfaits** (salle,
   housses de chaises, nappes, décoration…) ne changent pas avec le nombre de personnes ; les montants
   **par personne** (menu, couverts…) sont multipliés par le nombre de personnes de chaque colonne.
-- **Ajouter un frais** (en bas de la page) : nom du poste, détail facultatif, type (**Forfait** ou
+- **Ajouter un poste de dépense** (en bas de la page) : nom du poste, détail facultatif, type (**Forfait** ou
   **Par personne**) et montant en Ariary (« 400 000 », « 400000 » ou « 400 000 Ar » : les trois sont
-  acceptés, sans virgule). Pour un frais par personne, indiquez le prix d’**une** personne.
+  acceptés, sans virgule). Pour un poste par personne, indiquez le prix d’**une** personne.
 - **Modifier** / **Supprimer** sur chaque ligne (par exemple quand Parasoly confirme le prix des couverts).
   Un poste compris dans un autre (sono, gâteau…) reste à 0 Ar pour mémoire.
 - **Personnes hors liste d’invités** : les personnes qui mangent au repas mais ne sont pas dans la
-  liste d’invités (les mariés, la famille non listée, le mpikabary…). Elles s’ajoutent aux trois
-  colonnes. Réglé à 7 au départ, comme dans le fichier Excel : 83 personnes = 76 invités de la liste + 7.
-- **Exporter (CSV)** : chaque frais avec ses totaux, puis les sous-totaux, le nombre de personnes,
+  liste d’invités. Elles s’ajoutent aux trois colonnes. Réglé à 7 au départ, comme dans le fichier
+  Excel : 83 personnes = 76 invités de la liste + 7 (Orimbato, la famille non listée (5), le
+  mpikabary). Rojo n’y figure pas : mettez 8 pour le compter.
+- **Exporter (CSV)** : chaque poste avec ses totaux, puis les sous-totaux, le nombre de personnes,
   le total et le coût par personne des trois colonnes (s’ouvre dans Excel).
 
 Rien à faire pour l’installer : avec la mise en ligne automatique (partie 2), la table du budget
@@ -664,14 +665,15 @@ npm run deploy
 
 Dans cet ordre (tout se fait dans le navigateur) :
 
-1. (Facultatif) Gardez un souvenir : **/admin → Import / export → Exporter (CSV)**.
+1. (Facultatif) Gardez un souvenir : **/admin → Import / export → Exporter (CSV)** (invités et réponses)
+   et **/admin → Budget → Exporter (CSV)** (budget).
 2. Si vous utilisez la mise en ligne automatique (partie 2) : GitHub → **Actions → Tests et mise en
    ligne → ⋯ → Disable workflow** (sinon une future modification de `main` recréerait le site).
 3. Tableau de bord Cloudflare :
    - **Workers & Pages → vodiondry → Settings → Delete** : le site et l’administration ne sont plus
      accessibles (les secrets sont supprimés avec lui) ;
    - **Storage & Databases → D1 → vodiondry → Settings → Delete** : la base de données (invités,
-     réponses, ouvertures, tables) est **définitivement** effacée.
+     réponses, ouvertures, tables, budget) est **définitivement** effacée.
 4. Seulement ensuite : GitHub → **Settings → Secrets and variables → Actions** : supprimez les quatre
    secrets ; Cloudflare → **My Profile → API Tokens** : supprimez le jeton ; sur le serveur, supprimez
    le fichier `.env` s’il existe.

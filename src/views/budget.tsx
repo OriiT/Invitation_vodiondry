@@ -1,5 +1,5 @@
 // Page « Budget » : trois scénarios (prévu, estimation, confirmé), personnes hors liste, postes « par personne »
-// et « forfaits », ajout et modification d'un frais. Aucun JavaScript propre à la page.
+// et « forfaits », ajout et modification d'un poste. Aucun JavaScript propre à la page.
 
 import type { FC } from 'hono/jsx';
 import {
@@ -21,7 +21,7 @@ import { Csrf, Layout } from './layout';
 
 type Flash = { kind: 'ok' | 'err'; text: string } | null | undefined;
 
-/** Valeurs du formulaire d'un frais telles que saisies (réaffichées en cas d'erreur). */
+/** Valeurs du formulaire d'un poste telles que saisies (réaffichées en cas d'erreur). */
 export interface BudgetFormValues {
   label: string;
   detail: string;
@@ -145,7 +145,7 @@ const PerPersonTable: FC<{ items: BudgetItem[]; totals: BudgetTotals; csrf: stri
             ) : (
               <tr>
                 <td colspan={6} data-label="" class="muted bg-empty">
-                  Aucun montant par personne. Ajoutez-en un avec le formulaire « Ajouter un frais ».
+                  Aucun montant par personne. Ajoutez-en un avec le formulaire « Ajouter un poste de dépense ».
                 </td>
               </tr>
             )}
@@ -202,7 +202,7 @@ const ForfaitTable: FC<{ items: BudgetItem[]; totals: BudgetTotals; csrf: string
           ) : (
             <tr>
               <td colspan={3} data-label="" class="muted bg-empty">
-                Aucun forfait. Ajoutez-en un avec le formulaire « Ajouter un frais ».
+                Aucun forfait. Ajoutez-en un avec le formulaire « Ajouter un poste de dépense ».
               </td>
             </tr>
           )}
@@ -223,7 +223,7 @@ const ForfaitTable: FC<{ items: BudgetItem[]; totals: BudgetTotals; csrf: string
   </section>
 );
 
-// ---------------------------------------------------------------- formulaire d'un frais
+// ---------------------------------------------------------------- formulaire d'un poste
 
 const BudgetFields: FC<{ v: BudgetFormValues; e: BudgetFormErrors; idPrefix: string }> = ({ v, e, idPrefix }) => (
   <>
@@ -302,7 +302,7 @@ export interface BudgetPageProps {
   items: BudgetItem[];
   people: PeopleCounts;
   totals: BudgetTotals;
-  /** Formulaire « Ajouter un frais » (valeurs réaffichées après une erreur). */
+  /** Formulaire « Ajouter un poste de dépense » (valeurs réaffichées après une erreur). */
   v: BudgetFormValues;
   e: BudgetFormErrors;
   /** Champ « personnes hors liste » (valeur saisie et erreur éventuelle). */
@@ -364,8 +364,9 @@ export const BudgetPage: FC<BudgetPageProps> = ({ csrf, flash, items, people, to
         </form>
         <FieldError text={extraError} />
         <p class="hint">
-          Personnes présentes au repas mais absentes de la liste d’invités (ex. les mariés, famille non listée, mpikabary).
-          Elles comptent dans les trois colonnes. Dans le fichier Excel : 83 = 76 invités de la liste + 7.
+          Personnes présentes au repas mais absentes de la liste d’invités. Elles comptent dans les trois colonnes.
+          Dans le fichier Excel : 83 = 76 invités de la liste + 7 (Orimbato, la famille non listée (5), le mpikabary) ;
+          Rojo n’y figure pas : mettez 8 pour le compter.
         </p>
       </section>
 
@@ -373,7 +374,7 @@ export const BudgetPage: FC<BudgetPageProps> = ({ csrf, flash, items, people, to
       <ForfaitTable items={forfaits} totals={totals} csrf={csrf} />
 
       <section class="card narrow" id="ajouter" aria-labelledby="ajouter-t">
-        <h2 id="ajouter-t">Ajouter un frais</h2>
+        <h2 id="ajouter-t">Ajouter un poste de dépense</h2>
         <form method="post" action="/admin/budget#ajouter" class="form">
           <Csrf token={csrf} />
           <BudgetFields v={v} e={e} idPrefix="new" />
@@ -399,12 +400,12 @@ export interface BudgetEditProps {
 }
 
 export const BudgetEditPage: FC<BudgetEditProps> = ({ csrf, flash, item, v, e }) => (
-  <Layout title={`Frais : ${item.label}`} active="budget" csrf={csrf} flash={flash} styles={STYLES}>
+  <Layout title={`Poste : ${item.label}`} active="budget" csrf={csrf} flash={flash} styles={STYLES}>
     <p class="back no-print">
       <a href="/admin/budget">← Budget</a>
     </p>
     <div class="page-head">
-      <h1 class="bg-edit-title">Modifier un frais</h1>
+      <h1 class="bg-edit-title">Modifier le poste</h1>
     </div>
     <section class="card narrow">
       <p class="muted small bg-edit-was">
@@ -425,12 +426,12 @@ export const BudgetEditPage: FC<BudgetEditProps> = ({ csrf, flash, item, v, e })
       </form>
     </section>
     <section class="card narrow danger-zone">
-      <h2>Supprimer ce frais</h2>
+      <h2>Supprimer ce poste</h2>
       <p class="muted">« {item.label} » disparaîtra du budget et des totaux.</p>
       <form method="post" action={`/admin/budget/${item.id}/delete`} data-confirm={`Supprimer « ${item.label} » du budget ?`}>
         <Csrf token={csrf} />
         <button type="submit" class="btn btn-danger">
-          Supprimer ce frais
+          Supprimer ce poste
         </button>
       </form>
     </section>

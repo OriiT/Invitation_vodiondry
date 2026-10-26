@@ -182,7 +182,7 @@ describe('budget : ajouter, modifier, supprimer un frais', () => {
     expect(it.sort_order).toBe(17);
     expect(res.headers.get('location')).toBe(`/admin/budget?ok=created#frais-${it.id}`);
     const html = await page(s, '/admin/budget?ok=created');
-    expect(html).toContain('Frais ajouté.');
+    expect(html).toContain('Poste ajouté.');
     expect(tileTotal(html, 'prevu')).toBe(formatAr(5_149_000 + 400_000));
     expect(tileTotal(html, 'confirme')).toBe(formatAr(1_165_000 + 400_000 + 48_000 * 7));
     expect(html).toContain(`id="frais-${it.id}"`);
@@ -231,12 +231,12 @@ describe('budget : ajouter, modifier, supprimer un frais', () => {
     const s = await login();
     const menu = await itemByLabel('Menu Parasoly 3');
     const edit = await page(s, `/admin/budget/${menu.id}/edit`);
-    expect(edit).toContain('Modifier un frais');
+    expect(edit).toContain('Modifier le poste');
     expect(edit).toContain('value="Menu Parasoly 3"');
     expect(edit).toContain('value="45 000"');
     expect(edit).toMatch(/<option value="par_personne" selected="">/);
     expect(edit).toContain(`action="/admin/budget/${menu.id}/delete"`);
-    expect(edit).toContain('Supprimer ce frais');
+    expect(edit).toContain('Supprimer ce poste');
 
     const bad = await adminPost(s, `/admin/budget/${menu.id}`, { label: 'Menu Parasoly 4', detail: '', kind: 'par_personne', amount: '50,5' });
     expect(bad.status).toBe(400);
@@ -251,7 +251,7 @@ describe('budget : ajouter, modifier, supprimer un frais', () => {
     expect(res.headers.get('location')).toBe(`/admin/budget?ok=updated#frais-${menu.id}`);
     expect(await itemByLabel('Menu Parasoly 4')).toMatchObject({ id: menu.id, amount: 50_000, detail: 'nouveau devis' });
     const html = await page(s, '/admin/budget?ok=updated');
-    expect(html).toContain('Frais enregistré.');
+    expect(html).toContain('Poste enregistré.');
     expect(tileTotal(html, 'prevu')).toBe(formatAr(1_165_000 + 53_000 * 83));
 
     // Un forfait peut devenir un montant par personne.
@@ -268,10 +268,10 @@ describe('budget : ajouter, modifier, supprimer un frais', () => {
     expect(html).toContain(`data-confirm="Supprimer « Décoration salle » du budget ?"`);
     const res = await adminPost(s, `/admin/budget/${deco.id}/delete`);
     expect(res.status).toBe(303);
-    expect(res.headers.get('location')).toBe('/admin/budget?ok=deleted#forfaits');
+    expect(res.headers.get('location')).toBe('/admin/budget?ok=deleted');
     expect((await items()).some((x) => x.id === deco.id)).toBe(false);
     const after = await page(s, '/admin/budget?ok=deleted');
-    expect(after).toContain('Frais supprimé.');
+    expect(after).toContain('Poste supprimé.');
     expect(tileTotal(after, 'prevu')).toBe(formatAr(5_149_000 - 750_000));
   });
 
@@ -284,7 +284,7 @@ describe('budget : ajouter, modifier, supprimer un frais', () => {
     ]) {
       expect(res.status).toBe(404);
       const html = await res.text();
-      expect(html).toContain('Frais introuvable');
+      expect(html).toContain('Poste introuvable');
       expect(html).toContain('href="/admin/budget"');
     }
   });

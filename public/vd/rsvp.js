@@ -39,7 +39,10 @@
     let current = null;
     let timer = 0;
     let anim = null;
+    let down = false; // doigt (ou bouton de souris) appuyé
+    let stopT = 0;
     const stop = () => {
+      clearTimeout(stopT);
       if (anim) anim.cancel();
       anim = null;
       root.style.scrollSnapType = '';
@@ -52,8 +55,8 @@
     const peek = () => {
       const r = current && current.getBoundingClientRect();
       if (!r || Math.abs(r.top) > 4 || done.has(current)) return;
-      // Pas pendant l'enveloppe, la fenêtre de réponse, ni onglet en arrière-plan : on réessaie plus tard.
-      if (!root.classList.contains('opened') || root.classList.contains('locked') || root.classList.contains('vd-lock') || document.hidden) return arm();
+      // Pas pendant l'enveloppe, la fenêtre de réponse, un doigt posé, ni onglet en arrière-plan : on réessaie plus tard.
+      if (!root.classList.contains('opened') || root.classList.contains('locked') || root.classList.contains('vd-lock') || document.hidden || down) return arm();
       done.add(current);
       const up = (k) => 'translateY(' + -Math.round(innerHeight * k) + 'px)';
       root.style.scrollSnapType = 'none';
@@ -79,10 +82,22 @@
     PEEK.forEach(([s]) => { const el = $(s); if (el) io.observe(el); });
     // Enveloppe ouverte, fenêtre de réponse fermée… : le délai repart de l'instant où la page est visible.
     new MutationObserver(arm).observe(root, { attributes: true, attributeFilter: ['class'] });
-    // L'invité agit : on repart de zéro (et un rebond en cours s'arrête net).
-    ['pointerdown', 'wheel', 'keydown', 'touchstart'].forEach((t) =>
-      addEventListener(t, () => { if (anim) stop(); arm(); }, { passive: true }),
-    );
+    // L'invité agit : le délai repart de zéro. Un rebond en cours se fige sous le doigt (le toucher atteint bien le
+    // bouton visé, là où il est affiché) et s'arrête juste après ; il s'arrête tout de suite si l'invité fait défiler.
+    const on = (types, fn) => types.forEach((t) => addEventListener(t, fn, { passive: true }));
+    on(['pointerdown', 'touchstart'], () => {
+      down = true;
+      if (anim) { clearTimeout(stopT); anim.pause(); }
+      arm();
+    });
+    on(['pointerup', 'pointercancel', 'touchend', 'touchcancel'], () => {
+      down = false;
+      if (anim) { clearTimeout(stopT); stopT = setTimeout(stop, 350); }
+      arm();
+    });
+    on(['touchmove', 'wheel', 'keydown'], () => { if (anim) stop(); arm(); });
+    // Retour sur l'onglet (après l'itinéraire dans Maps, par exemple) : le délai repart de zéro.
+    document.addEventListener('visibilitychange', () => { if (document.hidden) clearTimeout(timer); else arm(); });
   }
 
   const yes = $('#rsvpYes');

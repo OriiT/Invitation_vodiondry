@@ -29,5 +29,5 @@ INSERT INTO budget_items (label, detail, kind, amount, sort_order) VALUES
   ('Divers', '', 'forfait', 0, 16);
 
 -- Personnes présentes au repas mais absentes de la liste d'invités (lignes que l'import ignore volontairement :
--- les mariés, une famille non identifiée, le mpikabary). Fichier Excel : 83 personnes = 76 de la liste + 7.
+-- Orimbato 1, une famille non identifiée 5, le mpikabary 1). Fichier Excel : 83 personnes = 76 de la liste + 7.
 INSERT INTO settings (key, value) VALUES ('budget_extra_people', '7') ON CONFLICT(key) DO NOTHING;

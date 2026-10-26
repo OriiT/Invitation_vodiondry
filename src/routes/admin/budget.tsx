@@ -1,9 +1,9 @@
 // Administration : budget du mariage (/admin/budget).
 //   GET  /             page : trois scénarios, personnes hors liste, postes par personne et forfaits
-//   POST /             ajouter un frais
-//   GET  /:id/edit     modifier un frais (formulaire)
-//   POST /:id          enregistrer un frais
-//   POST /:id/delete   supprimer un frais
+//   POST /             ajouter un poste
+//   GET  /:id/edit     modifier un poste (formulaire)
+//   POST /:id          enregistrer un poste
+//   POST /:id/delete   supprimer un poste
 //   POST /personnes    personnes hors liste d'invités (réglage budget_extra_people)
 //   GET  /export.csv   export CSV
 // Session et jeton CSRF sont vérifiés en amont (routes/admin/index.tsx).
@@ -44,9 +44,9 @@ type Flash = { kind: 'ok' | 'err'; text: string } | null;
 type FormBody = Record<string, string | File>;
 
 const OK_MESSAGES: Record<string, string> = {
-  created: 'Frais ajouté.',
-  updated: 'Frais enregistré.',
-  deleted: 'Frais supprimé.',
+  created: 'Poste ajouté.',
+  updated: 'Poste enregistré.',
+  deleted: 'Poste supprimé.',
   personnes: 'Nombre de personnes hors liste enregistré.',
 };
 
@@ -63,9 +63,9 @@ function notFound(c: Ctx) {
   return c.html(
     <NotFoundPage
       csrf={c.get('csrf')}
-      title="Frais introuvable"
+      title="Poste introuvable"
       active="budget"
-      text="Ce frais n’existe pas ou a été supprimé."
+      text="Ce poste n’existe pas ou a été supprimé."
       backHref="/admin/budget"
       backLabel="Retour au budget"
     />,
@@ -210,7 +210,8 @@ app.post('/:id{[0-9]+}/delete', async (c) => {
   const item = await loadItem(c);
   if (!item) return notFound(c);
   await deleteBudgetItem(c.env.DB, item.id);
-  return c.redirect(`/admin/budget?ok=deleted#${item.kind === 'forfait' ? 'forfaits' : 'par-personne'}`, 303);
+  // Sans ancre, comme les autres pages : le message « Poste supprimé. » reste visible en haut.
+  return c.redirect('/admin/budget?ok=deleted', 303);
 });
 
 // ---------------------------------------------------------------- export

@@ -16,8 +16,8 @@ export const DEFAULT_SETTINGS = {
   /** Incrémenté à chaque changement de mot de passe : invalide toutes les sessions existantes. */
   session_epoch: '0',
   /**
-   * Budget : personnes présentes au repas mais absentes de la liste d'invités (les mariés, famille non listée,
-   * mpikabary…), ajoutées au nombre de personnes des trois scénarios. Nombre entier de 0 à 500
+   * Budget : personnes présentes au repas mais absentes de la liste d'invités (lignes ignorées par l'import :
+   * Orimbato, famille non listée, mpikabary…), ajoutées au nombre de personnes des trois scénarios. Nombre entier de 0 à 500
    * (7 posé par migrations/0003_budget.sql, comme dans le fichier Excel).
    */
   budget_extra_people: '0',
