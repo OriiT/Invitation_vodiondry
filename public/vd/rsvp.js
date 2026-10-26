@@ -6,6 +6,9 @@
   const D = window.VODIONDRY || { mode: 'generic' };
   const $ = (s) => document.querySelector(s);
 
+  // Arrête le petit rebond (défini plus bas) avant un défilement voulu par l'invité.
+  let stopPeek = () => {};
+
   // « Découvrir » (bas de la page 2) : simple indication dans le site d'origine, rendue cliquable
   // (même apparence) → défilement doux jusqu'à la page suivante.
   const cue = $('#sc2 .cue');
@@ -18,6 +21,8 @@
     cue.setAttribute('aria-label', 'Découvrir la suite de l’invitation');
     const goNext = (e) => {
       e.preventDefault();
+      // Sinon le défilement viserait la page décalée par le rebond et s'arrêterait entre deux pages.
+      stopPeek();
       const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;
       nextPage.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
     };
@@ -40,6 +45,7 @@
     let timer = 0;
     let anim = null;
     let down = false; // doigt (ou bouton de souris) appuyé
+    let downAt = 0;
     let stopT = 0;
     const stop = () => {
       clearTimeout(stopT);
@@ -47,6 +53,7 @@
       anim = null;
       root.style.scrollSnapType = '';
     };
+    stopPeek = stop;
     const arm = () => {
       clearTimeout(timer);
       if (!current || done.has(current)) return;
@@ -56,7 +63,7 @@
       const r = current && current.getBoundingClientRect();
       if (!r || Math.abs(r.top) > 4 || done.has(current)) return;
       // Pas pendant l'enveloppe, la fenêtre de réponse, un doigt posé, ni onglet en arrière-plan : on réessaie plus tard.
-      if (!root.classList.contains('opened') || root.classList.contains('locked') || root.classList.contains('vd-lock') || document.hidden || down) return arm();
+      if (!root.classList.contains('opened') || root.classList.contains('locked') || root.classList.contains('vd-lock') || document.hidden || (down && performance.now() - downAt < 10000)) return arm();
       done.add(current);
       const up = (k) => 'translateY(' + -Math.round(innerHeight * k) + 'px)';
       root.style.scrollSnapType = 'none';
@@ -85,9 +92,12 @@
     // L'invité agit : le délai repart de zéro. Un rebond en cours se fige sous le doigt (le toucher atteint bien le
     // bouton visé, là où il est affiché) et s'arrête juste après ; il s'arrête tout de suite si l'invité fait défiler.
     const on = (types, fn) => types.forEach((t) => addEventListener(t, fn, { passive: true }));
+    // (Garde-fous : un appui dont le relâchement n'arrive jamais ne fige pas le rebond plus de 1,5 s, ni ne bloque
+    // les suivants plus de 10 s.)
     on(['pointerdown', 'touchstart'], () => {
       down = true;
-      if (anim) { clearTimeout(stopT); anim.pause(); }
+      downAt = performance.now();
+      if (anim) { clearTimeout(stopT); anim.pause(); stopT = setTimeout(stop, 1500); }
       arm();
     });
     on(['pointerup', 'pointercancel', 'touchend', 'touchcancel'], () => {
