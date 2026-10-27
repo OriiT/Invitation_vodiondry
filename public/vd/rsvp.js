@@ -190,6 +190,16 @@
   // la phrase ne soit remplacée par un texte simple (voir replay ci-dessous).
   let firstCh = null;
 
+  // Oui / Non mis en évidence (légère pulsation, voir rsvp.css) tant que l'invité n'a pas répondu et que les réponses
+  // sont ouvertes ; elle démarre une fois les boutons apparus (fin de leur apparition dans la carte).
+  const pulse = (on) => {
+    yes.classList.toggle('vd-pulse', on);
+    no.classList.toggle('vd-pulse', on);
+  };
+  yes.addEventListener('transitionend', (e) => {
+    if (e.propertyName === 'opacity' && wrap.classList.contains('typed')) pulse(!state.response && state.open);
+  });
+
   function render(dynamic) {
     const r = state.response;
     // Après l'apparition des boutons, pas de délai d'animation pour les changements de style.
@@ -205,6 +215,7 @@
       closing.classList.toggle('vd-longer', t.length > LONGER_TEXT);
     }
     if (r) {
+      pulse(false);
       // Une seule action : « Modifier » (contour), à la place de « Oui, je viens ».
       yes.textContent = 'Modifier';
       yes.classList.remove('fill');
@@ -226,6 +237,7 @@
   // deux pour que la carte se tape de nouveau lettre à lettre, comme au premier passage.
   new MutationObserver(() => {
     if (wrap.classList.contains('typed')) return;
+    pulse(false); // reprendra quand les boutons seront de nouveau apparus
     yes.style.transitionDelay = '';
     if (!closing || firstCh === null || closing.querySelector('.ch')) return;
     const frag = document.createDocumentFragment();

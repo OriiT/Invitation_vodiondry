@@ -3,6 +3,18 @@
 
 .btn[hidden] { display: none !important; }
 
+/* Oui / Non mis en évidence tant que l'invité n'a pas répondu : légère pulsation (halo brun qui s'élargit puis
+   s'efface, bouton à peine grossi), une fois les boutons apparus. « scale » (et non « transform ») : ne gêne pas
+   l'apparition des boutons du site. Rien si moins d'animations demandé. */
+@keyframes vd-pulse {
+  0% { scale: 1; box-shadow: 0 0 0 0 rgba(107, 78, 54, .55); }
+  40% { scale: 1.07; box-shadow: 0 0 0 calc(var(--u) * 2) rgba(107, 78, 54, 0); }
+  70%, 100% { scale: 1; box-shadow: 0 0 0 0 rgba(107, 78, 54, 0); }
+}
+.btn.vd-pulse { animation: vd-pulse 2.4s ease-out infinite; }
+#rsvpNo.vd-pulse { animation-delay: .2s; }
+@media (prefers-reduced-motion: reduce) { .btn.vd-pulse { animation: none; } }
+
 /* « Découvrir » cliquable : même apparence, zone de toucher agrandie vers le haut (invisible). */
 .cue.vd-cue { pointer-events: auto; cursor: pointer; padding-top: 16px; -webkit-tap-highlight-color: transparent; }
 html.scrolled .cue.vd-cue { pointer-events: none; }
