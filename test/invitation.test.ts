@@ -6,16 +6,36 @@ import { call, makeGuest } from './helpers';
 /** Empreinte SHA-256 de public/index.html tel que livré dans vodiondry-site.zip. */
 const SITE_INDEX_SHA256 = '941fa2ed9e44cabada26a44936e935e72e5c458f3d89b27ed7d77d374c90ac81';
 
+/** Seule modification du site livré, demandée par les mariés : le lien « Itinéraire » d'Ankofafa pointe sur le lieu
+ * exact de la cérémonie (H496+94, Fianarantsoa) au lieu d'une recherche « Ankofafa Fianarantsoa ». */
+const ANKOFAFA_HREF = {
+  delivered: 'href="https://www.google.com/maps/search/?api=1&amp;query=Ankofafa%20Fianarantsoa"',
+  now: 'href="https://maps.app.goo.gl/jgZgtUJWDNnCWe2w8"',
+};
+
 async function sha256(buf: ArrayBuffer): Promise<string> {
   const h = await crypto.subtle.digest('SHA-256', buf);
   return [...new Uint8Array(h)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 describe('site d’invitation intégré tel quel', () => {
-  it('public/index.html est identique au fichier du zip', async () => {
+  it('public/index.html est identique au fichier du zip, sauf le lien « Itinéraire » d’Ankofafa', async () => {
     const res = await env.ASSETS.fetch(new Request('https://vodiondry.test/'));
     expect(res.status).toBe(200);
-    expect(await sha256(await res.arrayBuffer())).toBe(SITE_INDEX_SHA256);
+    const html = await res.text();
+    expect(html.split(ANKOFAFA_HREF.now)).toHaveLength(2);
+    expect(html).not.toContain(ANKOFAFA_HREF.delivered);
+    const delivered = html.replace(ANKOFAFA_HREF.now, ANKOFAFA_HREF.delivered);
+    expect(await sha256(new TextEncoder().encode(delivered).buffer as ArrayBuffer)).toBe(SITE_INDEX_SHA256);
+  });
+
+  it('le lien « Itinéraire » d’Ankofafa mène au lieu exact, sur l’invitation personnelle comme générique', async () => {
+    const g = await makeGuest({ name: 'Tante Lala', expected_count: 2 });
+    for (const path of ['/', `/i/${g.code}`]) {
+      const html = await (await call(path, { headers: { 'user-agent': 'Mozilla/5.0' } })).text();
+      expect(html, path).toContain(ANKOFAFA_HREF.now);
+      expect(html, path).not.toContain(ANKOFAFA_HREF.delivered);
+    }
   });
 
   it('les points d’ancrage de la personnalisation existent dans le site', async () => {

@@ -792,9 +792,11 @@ Faites ce choix **avant** d’envoyer les invitations : les liens déjà envoyé
 - **Cloudflare Workers** (code dans `src/`, framework [Hono](https://hono.dev), TypeScript),
   **D1** (base SQLite) et **Workers Static Assets** (le dossier `public/`), le tout publié par un seul
   `wrangler deploy`.
-- `public/index.html` et `public/a/` = le site d’invitation **tel que livré**, sans aucune modification
-  (un test vérifie son empreinte). Pour un lien personnel, le Worker ajoute à la volée les données de
-  l’invité et `public/vd/rsvp.js`, qui personnalise la phrase de la carte « Réponse », ouvre la
+- `public/index.html` et `public/a/` = le site d’invitation **tel que livré**, à une exception près
+  demandée par les mariés : le bouton « Itinéraire » d’Ankofafa mène au lieu exact de la cérémonie
+  (H496+94, Fianarantsoa). Un test vérifie que rien d’autre n’a changé (empreinte du fichier livré).
+  Pour un lien personnel, le Worker ajoute à la volée les données de l’invité et `public/vd/rsvp.js`,
+  qui personnalise la phrase de la carte « Réponse », ouvre la
   fenêtre de réponse quand on touche « Oui, je viens » / « Non », rend « Découvrir » cliquable et fait
   le petit rebond vers la page suivante (désactivé si le téléphone demande moins d’animations).
 - Administration rendue côté serveur (`src/routes/admin/`, `src/views/`), un peu de JavaScript sans
