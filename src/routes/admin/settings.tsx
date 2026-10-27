@@ -1,4 +1,5 @@
-// Réglages : messages WhatsApp, date limite des réponses, publication du plan de table, mot de passe.
+// Réglages : messages WhatsApp, date limite des réponses, publication du plan de table, email à chaque réponse,
+// mot de passe.
 // Monté sur /admin/settings (session + CSRF déjà vérifiés par src/routes/admin/index.tsx).
 
 import { Hono, type Context } from 'hono';
@@ -6,6 +7,7 @@ import type { FC } from 'hono/jsx';
 import type { AppEnv } from '../../env';
 import { changeAdminPassword, MIN_PASSWORD, startSession, verifyAdminPassword, weakAdminPassword } from '../../lib/auth';
 import { guestLink } from '../../lib/db';
+import { notifyAddress, sendEmail } from '../../lib/notify';
 import { clientIp, rateLimit, releaseHit } from '../../lib/ratelimit';
 import {
   DEFAULT_SETTINGS,
@@ -30,6 +32,9 @@ export { MIN_PASSWORD };
 export const MAX_PASSWORD = 200;
 const PW_LIMIT = 10;
 const PW_WINDOW = 15 * 60_000;
+/** Emails de test : quelques-uns suffisent (quota quotidien du service d'envoi). */
+const TEST_MAIL_LIMIT = 5;
+const TEST_MAIL_WINDOW = 10 * 60_000;
 
 /** Exemple utilisé pour l'aperçu des messages. */
 const EXAMPLE_NAME = 'Tante Lala';
@@ -46,7 +51,11 @@ const OK_MESSAGES: Record<string, string> = {
   saved: 'Réglages enregistrés.',
   reset: 'Les deux messages par défaut ont été rétablis.',
   password: 'Mot de passe changé. Tous les autres appareils ont été déconnectés.',
+  notify: 'Email de test envoyé : regardez votre boîte de réception (et les dossiers Promotions ou Spam).',
 };
+
+/** Messages affichés dans leur propre carte (la page y défile), et non en haut de page. */
+const CARD_OK: Record<string, 'pw' | 'notify'> = { password: 'pw', notify: 'notify' };
 
 const TEMPLATE_KEYS = ['whatsapp_template', 'whatsapp_reminder_template'] as const;
 type TemplateKey = (typeof TEMPLATE_KEYS)[number];
@@ -183,11 +192,27 @@ interface PageProps {
   flash?: Flash;
   /** Message affiché dans la carte « Mot de passe ». */
   pwFlash?: Flash;
+  /** Adresse qui reçoit un email à chaque réponse (null : non configuré). */
+  notifyTo: string | null;
+  /** Message affiché dans la carte « Email à chaque réponse ». */
+  notifyFlash?: Flash;
   /** Mot de passe initial (secret ADMIN_PASSWORD) trop court : à changer. */
   weakPassword?: boolean;
 }
 
-const SettingsPage: FC<PageProps> = ({ csrf, origin, settings, values, errors = {}, pwErrors = {}, flash, pwFlash, weakPassword }) => {
+const SettingsPage: FC<PageProps> = ({
+  csrf,
+  origin,
+  settings,
+  values,
+  errors = {},
+  pwErrors = {},
+  flash,
+  pwFlash,
+  notifyTo,
+  notifyFlash,
+  weakPassword,
+}) => {
   const exampleVars = {
     nom: EXAMPLE_NAME,
     lien: guestLink(origin, EXAMPLE_CODE),
@@ -287,6 +312,35 @@ const SettingsPage: FC<PageProps> = ({ csrf, origin, settings, values, errors = 
         </div>
       </form>
 
+      <section class="card narrow" id="notifications">
+        <h2>Email à chaque réponse</h2>
+        {notifyFlash ? (
+          <p class={`flash flash-${notifyFlash.kind}`} role={notifyFlash.kind === 'err' ? 'alert' : 'status'}>
+            {notifyFlash.text}
+          </p>
+        ) : null}
+        {notifyTo ? (
+          <>
+            <p class="small">
+              <strong>Activé.</strong> Quand un invité répond ou modifie sa réponse sur son invitation, un email part vers{' '}
+              <strong>{notifyTo}</strong> : son nom, oui ou non, le nombre de personnes, son petit mot et les totaux. Les
+              réponses saisies ici, dans l’administration, n’envoient pas d’email.
+            </p>
+            <form method="post" action="/admin/settings/notify-test#notifications" class="actions">
+              <Csrf token={csrf} />
+              <button type="submit" class="btn">
+                Envoyer un email de test
+              </button>
+            </form>
+          </>
+        ) : (
+          <p class="muted small">
+            Désactivé. Pour recevoir un email à chaque réponse d’un invité, ajoutez les secrets <code>RESEND_API_KEY</code> et{' '}
+            <code>NOTIFY_EMAIL</code> (README, partie « Être prévenu par email à chaque réponse »).
+          </p>
+        )}
+      </section>
+
       <section class="card narrow" id="mot-de-passe">
         <h2>Mot de passe de l’administration</h2>
         {pwFlash ? (
@@ -372,13 +426,15 @@ const SettingsPage: FC<PageProps> = ({ csrf, origin, settings, values, errors = 
   );
 };
 
-async function render(c: Ctx, p: Partial<PageProps> & { status?: 200 | 400 | 429 } = {}) {
+async function render(c: Ctx, p: Partial<PageProps> & { status?: 200 | 400 | 429 | 502 } = {}) {
   const settings = p.settings ?? (await getSettings(c.env.DB));
   const ok = c.req.query('ok') ?? '';
-  const okFlash: Flash = OK_MESSAGES[ok] ? { kind: 'ok', text: OK_MESSAGES[ok] } : null;
-  // Le message « mot de passe changé » s'affiche dans la carte du mot de passe (la page y défile).
-  const flash = p.flash ?? (ok === 'password' ? null : okFlash);
-  const pwFlash = p.pwFlash ?? (ok === 'password' ? okFlash : null);
+  const okFlash: Flash = Object.hasOwn(OK_MESSAGES, ok) ? { kind: 'ok', text: OK_MESSAGES[ok] } : null;
+  // « Mot de passe changé » et « email de test envoyé » s'affichent dans leur carte (la page y défile).
+  const card = Object.hasOwn(CARD_OK, ok) ? CARD_OK[ok] : null;
+  const flash = p.flash ?? (card ? null : okFlash);
+  const pwFlash = p.pwFlash ?? (card === 'pw' ? okFlash : null);
+  const notifyFlash = p.notifyFlash ?? (card === 'notify' ? okFlash : null);
   return c.html(
     <SettingsPage
       csrf={c.get('csrf')}
@@ -389,6 +445,8 @@ async function render(c: Ctx, p: Partial<PageProps> & { status?: 200 | 400 | 429
       pwErrors={p.pwErrors}
       flash={flash}
       pwFlash={pwFlash}
+      notifyTo={notifyAddress(c.env)}
+      notifyFlash={notifyFlash}
       weakPassword={weakAdminPassword(c.env, settings)}
     />,
     p.status ?? 200,
@@ -433,6 +491,27 @@ app.post('/', async (c) => {
     publish_tables: values.publish_tables ? '1' : '0',
   });
   return c.redirect('/admin/settings?ok=saved', 303);
+});
+
+app.post('/notify-test', async (c) => {
+  if (!notifyAddress(c.env)) return c.redirect('/admin/settings#notifications', 303);
+  if (!rateLimit(`notify-test:${clientIp(c.req.raw)}`, TEST_MAIL_LIMIT, TEST_MAIL_WINDOW)) {
+    return render(c, { status: 429, notifyFlash: { kind: 'err', text: 'Trop d’emails de test : réessayez dans 10 minutes.' } });
+  }
+  const sent = await sendEmail(c.env, {
+    subject: 'Email de test : les notifications fonctionnent',
+    text: [
+      'Bonjour,',
+      '',
+      'Cet email de test confirme que vous recevrez un email à chaque réponse d’un invité sur son invitation.',
+      '',
+      `Administration : ${new URL(c.req.url).origin}/admin`,
+    ].join('\n'),
+  });
+  if (!sent.ok) {
+    return render(c, { status: 502, notifyFlash: { kind: 'err', text: `L’email n’a pas pu être envoyé : ${sent.error}.` } });
+  }
+  return c.redirect('/admin/settings?ok=notify#notifications', 303);
 });
 
 app.post('/password', async (c) => {

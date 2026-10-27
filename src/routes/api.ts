@@ -3,7 +3,8 @@
 import { Hono } from 'hono';
 import type { AppEnv } from '../env';
 import { normalizeCode } from '../lib/codes';
-import { getGuestByCode, recentResponseCount, recordResponse, type GuestRow } from '../lib/db';
+import { computeTotals, getGuestByCode, listGuests, recentResponseCount, recordResponse, type GuestRow } from '../lib/db';
+import { notifyAddress, rsvpEmail, sendEmail } from '../lib/notify';
 import { clientIp, rateLimit } from '../lib/ratelimit';
 import { getSettings, isRsvpOpen, type Settings } from '../lib/settings';
 
@@ -120,6 +121,18 @@ api.post('/rsvp/:code', async (c) => {
 
   await recordResponse(c.env.DB, guest.id, { answer, count, message });
   const updated = (await getGuestByCode(c.env.DB, guest.code))!;
+
+  // Email aux mariés (si configuré), envoyé après la réponse à l'invité : il n'attend pas et une panne ne le gêne pas.
+  if (notifyAddress(c.env)) {
+    const previous = guest.answer ? { answer: guest.answer, count: guest.confirmed_count ?? 0 } : null;
+    const adminUrl = `${new URL(c.req.url).origin}/admin/guests/${guest.id}/edit`;
+    const task = (async () => {
+      const totals = computeTotals(await listGuests(c.env.DB));
+      const sent = await sendEmail(c.env, rsvpEmail({ name: guest.name, answer, count, message, previous, totals, adminUrl }));
+      if (!sent.ok) console.error(`Email de réponse non envoyé : ${sent.error}`);
+    })().catch((e) => console.error('Email de réponse non envoyé', e));
+    c.executionCtx.waitUntil(task);
+  }
   return c.json({ ok: true, ...publicState(updated, settings) });
 });
 

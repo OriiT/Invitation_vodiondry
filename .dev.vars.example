@@ -1,3 +1,6 @@
 # Secrets pour le développement local (npm run dev). Ne sert PAS en production.
 ADMIN_PASSWORD=admin-local
 SESSION_SECRET=remplacez-moi-par-une-longue-chaine-aleatoire-locale
+# Facultatif : email à chaque réponse d'un invité (service Resend, voir le README).
+# RESEND_API_KEY=re_...
+# NOTIFY_EMAIL=vous@gmail.com
