@@ -3,6 +3,27 @@
 
 .btn[hidden] { display: none !important; }
 
+/* Oui / Non mis en évidence tant que l'invité n'a pas répondu : les deux boutons clignotent ensemble, en surbrillance
+   (fond plus clair, halo brun lumineux, bouton un peu grossi), une fois apparus sur la carte. « scale » (et non
+   « transform ») : ne gêne pas l'apparition des boutons du site. Rien si moins d'animations demandé. */
+@keyframes vd-blink-yes {
+  0%, 100% { scale: 1; box-shadow: 0 0 0 0 rgba(107, 78, 54, 0); }
+  50% {
+    scale: 1.08; background-color: #8a6748; border-color: #8a6748;
+    box-shadow: 0 0 0 calc(var(--u) * .6) rgba(107, 78, 54, .25), 0 0 calc(var(--u) * 3) calc(var(--u) * .4) rgba(107, 78, 54, .55);
+  }
+}
+@keyframes vd-blink-no {
+  0%, 100% { scale: 1; box-shadow: 0 0 0 0 rgba(107, 78, 54, 0); }
+  50% {
+    scale: 1.08; background-color: rgba(107, 78, 54, .16); border-color: #6b4e36;
+    box-shadow: 0 0 0 calc(var(--u) * .6) rgba(107, 78, 54, .2), 0 0 calc(var(--u) * 3) calc(var(--u) * .4) rgba(107, 78, 54, .45);
+  }
+}
+#rsvpYes.vd-pulse { animation: vd-blink-yes 1.4s ease-in-out infinite; }
+#rsvpNo.vd-pulse { animation: vd-blink-no 1.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { #rsvpYes.vd-pulse, #rsvpNo.vd-pulse { animation: none; } }
+
 /* « Découvrir » cliquable : même apparence, zone de toucher agrandie vers le haut (invisible). */
 .cue.vd-cue { pointer-events: auto; cursor: pointer; padding-top: 16px; -webkit-tap-highlight-color: transparent; }
 html.scrolled .cue.vd-cue { pointer-events: none; }
