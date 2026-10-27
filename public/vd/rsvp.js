@@ -190,8 +190,9 @@
   // la phrase ne soit remplacée par un texte simple (voir replay ci-dessous).
   let firstCh = null;
 
-  // Oui / Non mis en évidence (légère pulsation, voir rsvp.css) tant que l'invité n'a pas répondu et que les réponses
-  // sont ouvertes ; elle démarre une fois les boutons apparus (fin de leur apparition dans la carte).
+  // Oui / Non mis en évidence (clignotement en surbrillance, voir rsvp.css) tant que l'invité n'a pas répondu et que
+  // les réponses sont ouvertes ; il démarre une fois les boutons apparus (fin de leur apparition dans la carte).
+  let pulseT = 0;
   const pulse = (on) => {
     yes.classList.toggle('vd-pulse', on);
     no.classList.toggle('vd-pulse', on);
@@ -236,7 +237,13 @@
   // réponse, la phrase est un texte simple (sans lettres .ch) et « Modifier » n'a plus de délai : on rétablit les
   // deux pour que la carte se tape de nouveau lettre à lettre, comme au premier passage.
   new MutationObserver(() => {
-    if (wrap.classList.contains('typed')) return;
+    if (wrap.classList.contains('typed')) {
+      // Filet de sécurité si la fin d'apparition des boutons n'est pas signalée : clignotement au plus tard 6 s après.
+      clearTimeout(pulseT);
+      pulseT = setTimeout(() => { if (wrap.classList.contains('typed')) pulse(!state.response && state.open); }, 6000);
+      return;
+    }
+    clearTimeout(pulseT);
     pulse(false); // reprendra quand les boutons seront de nouveau apparus
     yes.style.transitionDelay = '';
     if (!closing || firstCh === null || closing.querySelector('.ch')) return;
