@@ -172,7 +172,6 @@ describe('fiche d’un invité', () => {
     expect((await adminPost(s, '/admin/guests/999999', { name: 'Koto', side: 'rojo', expected_count: '1' })).status).toBe(404);
     expect((await adminPost(s, '/admin/guests/999999/delete')).status).toBe(404);
     expect((await adminPost(s, '/admin/guests/999999/regenerate')).status).toBe(404);
-    expect((await adminPost(s, '/admin/guests/999999/opens/clear')).status).toBe(404);
     expect((await adminPost(s, '/admin/guests/999999/response', { answer: 'oui', count: '1' })).status).toBe(404);
     expect(await guestCount()).toBe(0);
   });
@@ -214,43 +213,6 @@ describe('fiche d’un invité', () => {
     const page = await html(s, res.headers.get('location')!);
     expect(page).toContain(`${BASE}/i/${updated.code}`);
     expect(page).toContain('data-confirm="L’ancien lien ne fonctionnera plus. Continuer ?"');
-  });
-
-  it('efface les ouvertures d’un lien ouvert par les mariés, sans toucher à la réponse ni aux autres invités', async () => {
-    const s = await login();
-    const g = await makeGuest({ name: 'Tante Lala', expected_count: 2 });
-    const other = await makeGuest({ name: 'Soa' });
-    const open = (code: string) => call(`/i/${code}`, { headers: { 'user-agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)' } });
-    expect((await open(g.code)).status).toBe(200);
-    expect((await open(other.code)).status).toBe(200);
-    expect((await rsvp(g.code, { answer: 'oui', count: 2 })).status).toBe(200);
-    expect((await getGuest(env.DB, g.id))!.open_count).toBe(1);
-
-    const before = await html(s, `/admin/guests/${g.id}/edit`);
-    expect(before).toContain('Effacer les ouvertures');
-    expect(before).toContain('data-confirm="Effacer les ouvertures du lien de « Tante Lala » ? « Lien ouvert » repassera à « Non ».');
-
-    const res = await adminPost(s, `/admin/guests/${g.id}/opens/clear`);
-    expect(res.status).toBe(303);
-    expect(res.headers.get('location')).toBe(`/admin/guests/${g.id}/edit?ok=opens#ouvertures`);
-    const after = (await getGuest(env.DB, g.id))!;
-    expect(after.open_count).toBe(0);
-    expect(after).toMatchObject({ answer: 'oui', confirmed_count: 2 });
-    expect((await getGuest(env.DB, other.id))!.open_count).toBe(1);
-
-    const page = await html(s, `/admin/guests/${g.id}/edit?ok=opens`);
-    expect(page).toContain('Ouvertures effacées');
-    expect(page).toContain('Le lien n’a pas encore été ouvert.');
-    expect(page).not.toContain('Effacer les ouvertures</button>');
-    // Sans jeton anti-CSRF : refusé, rien n'est effacé.
-    expect((await open(other.code)).status).toBe(200);
-    const noCsrf = await call(`/admin/guests/${other.id}/opens/clear`, {
-      method: 'POST',
-      headers: { cookie: s.cookie, origin: BASE, 'content-type': 'application/x-www-form-urlencoded' },
-      body: '',
-    });
-    expect(noCsrf.status).toBe(403);
-    expect((await getGuest(env.DB, other.id))!.open_count).toBeGreaterThan(0);
   });
 
   it('affiche le lien personnel, les ouvertures et l’historique des réponses', async () => {
@@ -580,13 +542,7 @@ describe('accès sans session', () => {
       expect(res.status, path).toBe(302);
       expect(res.headers.get('location'), path).toMatch(/^\/admin\/login\?next=/);
     }
-    for (const path of [
-      `/admin/guests/${g.id}`,
-      `/admin/guests/${g.id}/delete`,
-      `/admin/guests/${g.id}/regenerate`,
-      `/admin/guests/${g.id}/opens/clear`,
-      '/admin/import',
-    ]) {
+    for (const path of [`/admin/guests/${g.id}`, `/admin/guests/${g.id}/delete`, `/admin/guests/${g.id}/regenerate`, '/admin/import']) {
       const res = await call(path, {
         method: 'POST',
         headers: { origin: BASE, 'content-type': 'application/x-www-form-urlencoded' },

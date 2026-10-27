@@ -348,7 +348,7 @@ export const EditGuestPage: FC<EditGuestProps> = ({ csrf, flash, g, link, wa, v,
       )}
     </section>
 
-    <section class="section" id="ouvertures">
+    <section class="section">
       <h2>Ouvertures du lien</h2>
       {g.open_count === 0 ? (
         <p class="card muted">Le lien n’a pas encore été ouvert.</p>
@@ -379,22 +379,6 @@ export const EditGuestPage: FC<EditGuestProps> = ({ csrf, flash, g, link, wa, v,
                 ))}
               </tbody>
             </table>
-          </div>
-          <div class="card no-print opens-clear">
-            <p class="hint">
-              C’est vous qui avez ouvert ce lien (par exemple depuis WhatsApp) ? Effacez ces ouvertures : « Lien ouvert »
-              repassera à « Non ». La réponse de l’invité ne change pas.
-            </p>
-            <form
-              method="post"
-              action={`/admin/guests/${g.id}/opens/clear`}
-              data-confirm={`Effacer les ouvertures du lien de « ${g.name} » ? « Lien ouvert » repassera à « Non ».`}
-            >
-              <Csrf token={csrf} />
-              <button type="submit" class="btn">
-                Effacer les ouvertures
-              </button>
-            </form>
           </div>
         </>
       )}

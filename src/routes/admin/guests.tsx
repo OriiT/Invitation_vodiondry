@@ -5,7 +5,6 @@ import { Hono, type Context } from 'hono';
 import type { AppEnv } from '../../env';
 import { weakAdminPassword } from '../../lib/auth';
 import {
-  clearOpens,
   computeTotals,
   createGuest,
   deleteGuest,
@@ -68,7 +67,6 @@ const OK_MESSAGES = new Map<string, string>([
   ['deleted', 'Invité supprimé.'],
   ['regenerated', 'Nouveau lien créé : l’ancien ne fonctionne plus. Pensez à envoyer le nouveau lien à l’invité.'],
   ['response', 'Réponse enregistrée.'],
-  ['opens', 'Ouvertures effacées : « Lien ouvert » est repassé à « Non ».'],
 ]);
 
 function okFlash(c: Ctx): Flash {
@@ -349,14 +347,6 @@ app.post('/guests/:id/regenerate', async (c) => {
   if (!g) return notFound(c);
   await regenerateCode(c.env.DB, g.id);
   return c.redirect(`/admin/guests/${g.id}/edit?ok=regenerated`, 303);
-});
-
-// Ouvertures effacées (lien ouvert par les mariés eux-mêmes, hors de l'administration) ; la réponse ne change pas.
-app.post('/guests/:id/opens/clear', async (c) => {
-  const g = await loadGuest(c);
-  if (!g) return notFound(c);
-  await clearOpens(c.env.DB, g.id);
-  return c.redirect(`/admin/guests/${g.id}/edit?ok=opens#ouvertures`, 303);
 });
 
 // Réponse saisie par les mariés (ex. invité qui a répondu par téléphone) : possible même après la date limite.
