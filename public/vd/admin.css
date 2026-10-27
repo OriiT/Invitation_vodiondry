@@ -227,3 +227,7 @@ table.sample th { background: #fbf8f4; color: var(--muted); font-weight: 600; te
   .topbar { position: static; }
   .nav { flex-wrap: wrap; overflow-x: visible; gap: 0 4px; }
 }
+
+/* Fiche invité : effacer les ouvertures d'un lien ouvert par les mariés eux-mêmes. */
+.opens-clear { margin-top: 12px; }
+.opens-clear .hint { margin-top: 0; }

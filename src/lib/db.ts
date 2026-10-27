@@ -178,6 +178,12 @@ export async function deleteGuest(db: D1Database, id: number): Promise<void> {
   ]);
 }
 
+/** Efface les ouvertures du lien d'un invité (ex. lien ouvert par les mariés eux-mêmes) : « Lien ouvert » repasse à Non.
+ * Ses réponses ne changent pas. */
+export async function clearOpens(db: D1Database, id: number): Promise<void> {
+  await db.prepare('DELETE FROM opens WHERE guest_id = ?1').bind(id).run();
+}
+
 /** Nouveau code pour un invité : l'ancien lien cesse de fonctionner. */
 export async function regenerateCode(db: D1Database, id: number): Promise<string> {
   for (let attempt = 0; attempt < 5; attempt++) {

@@ -566,7 +566,11 @@ seul (pour un SMS, Messenger…). **Voir** ouvre l’invitation telle que l’in
 
 - En haut : invités, personnes attendues, oui, non, sans réponse, personnes confirmées.
 - Filtres par côté (Rojo / Orimbato) et par statut (oui, non, sans réponse, lien jamais ouvert…).
-- Colonne **Lien ouvert** : si l’invité a ouvert son lien, et quand.
+- Colonne **Lien ouvert** : si l’invité a ouvert son lien, et quand (ce n’est pas sa réponse : la
+  réponse est la colonne **Réponse**).
+- Vous avez ouvert vous-même le lien d’un invité hors de l’administration (par exemple depuis
+  WhatsApp, dont le navigateur n’est pas connecté à l’administration) ? Fiche de l’invité →
+  **Effacer les ouvertures** : « Lien ouvert » repasse à « Non », sa réponse ne change pas.
 - Un invité peut confirmer **au plus le nombre de personnes prévu** pour lui dans la liste
   (modifiable dans sa fiche).
 - Un invité a répondu par téléphone ? Fiche de l’invité → **Saisir la réponse à la place de l’invité**
