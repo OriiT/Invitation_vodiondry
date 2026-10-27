@@ -32,12 +32,14 @@
     });
   }
 
-  // Petit rebond : si l'invité reste sur la page 2 ou 3 sans rien toucher, la page monte un instant puis redescend,
-  // laissant entrevoir le haut de la suivante (une fois par page). Mouvement visuel seulement (transform) ; pendant
+  // Petit rebond : si l'invité ne touche à rien pendant 4 s sur la page 2 ou 3, une fois la page entièrement affichée
+  // (textes apparus, carte « Réponse » écrite lettre à lettre), la page monte un instant puis redescend, laissant
+  // entrevoir le haut de la suivante (une fois par page). Mouvement visuel seulement (transform) ; pendant
   // ce temps, l'aimantation des pages est suspendue (sinon le navigateur suit le mouvement et l'annule) puis
   // rétablie : la position de défilement ne change pas. Rien si moins d'animations demandé.
   const pageEl = $('#page');
-  const PEEK = [['#sc2', 6000], ['#sc3', 11000]]; // délai sans geste ; page 3 : après l'écriture de la carte
+  const PEEK_PAGES = ['#sc2', '#sc3'];
+  const QUIET = 4000; // page immobile et sans geste depuis 4 s
   if (pageEl && pageEl.animate && 'IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
     const root = document.documentElement;
     const done = new Set();
@@ -57,7 +59,7 @@
     const arm = () => {
       clearTimeout(timer);
       if (!current || done.has(current)) return;
-      timer = setTimeout(peek, PEEK.find(([s]) => s === '#' + current.id)[1]);
+      timer = setTimeout(peek, QUIET);
     };
     const peek = () => {
       const r = current && current.getBoundingClientRect();
@@ -86,9 +88,14 @@
       }),
       { threshold: [0.97] },
     );
-    PEEK.forEach(([s]) => { const el = $(s); if (el) io.observe(el); });
+    PEEK_PAGES.forEach((s) => { const el = $(s); if (el) io.observe(el); });
     // Enveloppe ouverte, fenêtre de réponse fermée… : le délai repart de l'instant où la page est visible.
     new MutationObserver(arm).observe(root, { attributes: true, attributeFilter: ['class'] });
+    // Chaque apparition du site sur la page (textes, lettres de la carte, boutons) repousse le délai : il ne court
+    // qu'une fois la page immobile.
+    ['animationend', 'transitionend'].forEach((t) =>
+      pageEl.addEventListener(t, (e) => { if (!anim && current && current.contains(e.target)) arm(); }),
+    );
     // L'invité agit : le délai repart de zéro. Un rebond en cours se fige sous le doigt (le toucher atteint bien le
     // bouton visé, là où il est affiché) et s'arrête juste après ; il s'arrête tout de suite si l'invité fait défiler.
     const on = (types, fn) => types.forEach((t) => addEventListener(t, fn, { passive: true }));
