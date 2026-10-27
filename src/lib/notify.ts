@@ -9,6 +9,10 @@ export const RESEND_ENDPOINT = 'https://api.resend.com/emails';
 /** Expéditeur de test fourni par Resend : utilisable sans nom de domaine, vers l'adresse du compte seulement. */
 export const NOTIFY_FROM = 'Vodiondry <onboarding@resend.dev>';
 
+/** Emails de réponse par invité sur 24 h : un lien transmis ne doit pas pouvoir inonder la boîte des mariés (ni
+ * épuiser le quota gratuit de Resend). Les changements suivants restent visibles dans l'administration. */
+export const MAX_EMAILS_PER_GUEST_PER_DAY = 3;
+
 type NotifyEnv = Pick<Env, 'RESEND_API_KEY' | 'NOTIFY_EMAIL'>;
 
 /** Adresse qui reçoit les emails, ou null si les notifications ne sont pas configurées. */
@@ -40,6 +44,7 @@ const answerText = (answer: Answer, count: number) => (answer === 'oui' ? `oui, 
  * (U+2028/U+2029 construits par leur code : écrits tels quels, ils couperaient l'expression régulière.) */
 const LINE_BREAKS = new RegExp(`[\\u0000-\\u001f\\u007f${String.fromCharCode(0x2028, 0x2029)}]+`, 'g');
 const oneLine = (s: string) => s.replace(LINE_BREAKS, ' ').trim();
+const MESSAGE_LINES = new RegExp(`[\\r\\n${String.fromCharCode(0x2028, 0x2029)}]`);
 
 export function rsvpEmail(n: RsvpNotice): Mail {
   const name = oneLine(n.name);
@@ -48,15 +53,17 @@ export function rsvpEmail(n: RsvpNotice): Mail {
   const t = n.totals;
   const lines = [`${name} ${verb} : ${now.toUpperCase()}.`];
   if (n.previous) lines.push(`Réponse précédente : ${answerText(n.previous.answer, n.previous.count)}.`);
-  if (n.message.trim()) lines.push('', 'Son petit mot :', `« ${n.message.trim()} »`);
+  lines.push(`Fiche de l’invité : ${n.adminUrl}`);
+  // Petit mot écrit par l'invité : chaque ligne citée (« > »), lignes vides retirées, pour qu'il ne puisse pas imiter
+  // le reste de l'email (faux totaux, faux lien vers l'administration).
+  const said = n.message.split(MESSAGE_LINES).map((l) => l.trim()).filter(Boolean);
+  if (said.length) lines.push('', 'Son petit mot :', ...said.map((l) => `> ${l}`));
   lines.push(
     '',
     'Où en sont les réponses :',
     `- ${persons(t.confirmed)} confirmée${t.confirmed > 1 ? 's' : ''} (${t.oui} invitation${t.oui > 1 ? 's' : ''} « oui »)`,
     `- ${t.non} invitation${t.non > 1 ? 's' : ''} « non »`,
     `- ${t.none} invitation${t.none > 1 ? 's' : ''} sans réponse`,
-    '',
-    `Fiche de l’invité : ${n.adminUrl}`,
   );
   return { subject: `${name} ${verb} : ${now}`.slice(0, 200), text: lines.join('\n') };
 }

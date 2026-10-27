@@ -580,6 +580,8 @@ seul (pour un SMS, Messenger…). **Voir** ouvre l’invitation telle que l’in
 Facultatif. Une fois réglé, quand un invité répond ou modifie sa réponse sur son invitation, un email
 vous arrive : son nom, oui ou non, le nombre de personnes, son petit mot, les totaux à jour et le lien
 vers sa fiche. Les réponses que vous saisissez vous-même dans l’administration n’envoient pas d’email.
+Au plus 3 emails par invité et par 24 heures : s’il change encore d’avis, la nouvelle réponse est bien
+enregistrée et visible dans l’administration, sans nouvel email.
 
 L’envoi passe par **Resend**, un service gratuit (100 emails par jour). Sans nom de domaine à vous,
 Resend n’envoie qu’à **l’adresse avec laquelle vous créez le compte Resend** : un seul destinataire.
