@@ -5,6 +5,10 @@ export interface Env {
   ADMIN_PASSWORD?: string;
   /** Clé de signature des cookies de session (wrangler secret put SESSION_SECRET). */
   SESSION_SECRET?: string;
+  /** Facultatif : clé API Resend, pour recevoir un email à chaque réponse d'un invité (voir src/lib/notify.ts). */
+  RESEND_API_KEY?: string;
+  /** Facultatif : adresse qui reçoit ces emails (celle du compte Resend). */
+  NOTIFY_EMAIL?: string;
 }
 
 export interface Session {

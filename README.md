@@ -330,6 +330,9 @@ quatre fois :
 
 Ces secrets ne sont jamais visibles dans le code ni dans les journaux, et GitHub ne les réaffiche plus.
 
+Facultatif, plus tard : `RESEND_API_KEY` et `NOTIFY_EMAIL` pour recevoir un email à chaque réponse
+(voir [Être prévenu par email à chaque réponse](#être-prévenu-par-email-à-chaque-réponse)).
+
 ### Étape S6 — Lancer la mise en ligne
 
 1. Vérifiez que `main` est la branche par défaut : **Settings → General → Default branch → `main`**.
@@ -572,6 +575,39 @@ seul (pour un SMS, Messenger…). **Voir** ouvre l’invitation telle que l’in
 - Un invité a répondu par téléphone ? Fiche de l’invité → **Saisir la réponse à la place de l’invité**
   (possible même après la date limite).
 
+### Être prévenu par email à chaque réponse
+
+Facultatif. Une fois réglé, quand un invité répond ou modifie sa réponse sur son invitation, un email
+vous arrive : son nom, oui ou non, le nombre de personnes, son petit mot, les totaux à jour et le lien
+vers sa fiche. Les réponses que vous saisissez vous-même dans l’administration n’envoient pas d’email.
+Au plus 3 emails par invité et par 24 heures : s’il change encore d’avis, la nouvelle réponse est bien
+enregistrée et visible dans l’administration, sans nouvel email.
+
+L’envoi passe par **Resend**, un service gratuit (100 emails par jour). Sans nom de domaine à vous,
+Resend n’envoie qu’à **l’adresse avec laquelle vous créez le compte Resend** : un seul destinataire.
+
+1. Sur [resend.com](https://resend.com), créez un compte (**Sign up**) avec l’adresse Gmail où vous
+   voulez recevoir les emails, puis confirmez-la depuis l’email que Resend vous envoie.
+2. Dans Resend, menu de gauche **API Keys** → **Create API Key** : nom `vodiondry`, permission
+   **Sending access**, puis **Add**. Copiez la clé affichée (elle commence par `re_`) : elle n’est
+   montrée qu’une seule fois.
+3. Sur GitHub : dépôt → **Settings → Secrets and variables → Actions → New repository secret**, deux fois :
+
+   | Name | Secret |
+   |---|---|
+   | `RESEND_API_KEY` | la clé copiée à l’étape 2 |
+   | `NOTIFY_EMAIL` | l’adresse Gmail du compte Resend (exactement la même) |
+
+4. Onglet **Actions** → **Tests et mise en ligne** → **Run workflow** → branche `main` →
+   **Run workflow**, et attendez que tout soit vert ✅ (2 à 4 minutes).
+5. Administration → **Réglages** → carte **Email à chaque réponse** : elle affiche « Activé » et votre
+   adresse. Touchez **Envoyer un email de test** et regardez votre boîte de réception. Le premier email
+   peut arriver dans **Promotions** ou **Spam** : marquez-le « Non spam » pour recevoir les suivants
+   normalement. En cas d’échec, la carte affiche le message d’erreur de Resend (par exemple une clé
+   mal copiée).
+
+Pour arrêter les emails : supprimez la clé dans Resend (**API Keys → ⋯ → Delete**).
+
 ### Relancer
 
 Onglet **Relances** : la liste de ceux qui n’ont pas encore répondu (ceux qui n’ont jamais ouvert
@@ -637,8 +673,8 @@ avec la partie 3, `npm run deploy` s’en charge.
 ### Réglages
 
 Onglet **Réglages** : texte du message WhatsApp d’invitation et de relance (variables `{nom}`,
-`{lien}`, `{date_limite}`), date limite de réponse, publication du plan de table,
-changement du mot de passe de l’administration.
+`{lien}`, `{date_limite}`), date limite de réponse, publication du plan de table, email à chaque
+réponse (état et email de test), changement du mot de passe de l’administration.
 
 ---
 
@@ -799,6 +835,8 @@ Faites ce choix **avant** d’envoyer les invitations : les liens déjà envoyé
   qui personnalise la phrase de la carte « Réponse », ouvre la
   fenêtre de réponse quand on touche « Oui, je viens » / « Non », rend « Découvrir » cliquable et fait
   le petit rebond vers la page suivante (désactivé si le téléphone demande moins d’animations).
+- Email aux mariés à chaque réponse d’un invité (facultatif) : `src/lib/notify.ts`, envoyé par l’API de
+  Resend après la réponse (l’invité n’attend pas, une panne de Resend ne bloque pas sa réponse).
 - Administration rendue côté serveur (`src/routes/admin/`, `src/views/`), un peu de JavaScript sans
   framework (`public/vd/admin.js`, `public/vd/tables.js` + SortableJS pour le glisser-déposer).
 - Base de données : `migrations/0001_init.sql` — `guests`, `responses` (une ligne par réponse ou

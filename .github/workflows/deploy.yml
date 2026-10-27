@@ -6,6 +6,9 @@
 #   CLOUDFLARE_ACCOUNT_ID  identifiant du compte Cloudflare
 #   ADMIN_PASSWORD         mot de passe de l'administration (/admin)
 #   SESSION_SECRET         longue chaîne aléatoire (au moins 32 caractères)
+# Facultatifs (email aux mariés à chaque réponse, voir le README) :
+#   RESEND_API_KEY         clé API du service Resend (commence par « re_ »)
+#   NOTIFY_EMAIL           adresse qui reçoit les emails (celle du compte Resend)
 # Tant qu'ils manquent (ou que database_id n'est pas renseigné dans wrangler.toml), la mise en ligne est
 # sautée avec un message ; lancée à la main (« Run workflow »), elle échoue alors en rouge pour le signaler.
 
@@ -111,9 +114,14 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          NOTIFY_EMAIL: ${{ secrets.NOTIFY_EMAIL }}
         run: |
           umask 077
           f="$RUNNER_TEMP/secrets.json"
-          node -e 'process.stdout.write(JSON.stringify({ ADMIN_PASSWORD: process.env.ADMIN_PASSWORD, SESSION_SECRET: process.env.SESSION_SECRET }))' > "$f"
+          # Les deux secrets facultatifs ne sont envoyés que s'ils existent dans GitHub.
+          node -e 'const e = process.env; const s = { ADMIN_PASSWORD: e.ADMIN_PASSWORD, SESSION_SECRET: e.SESSION_SECRET };
+            for (const k of ["RESEND_API_KEY", "NOTIFY_EMAIL"]) if (e[k]) s[k] = e[k];
+            process.stdout.write(JSON.stringify(s))' > "$f"
           npx wrangler secret bulk "$f"
           rm -f "$f"
