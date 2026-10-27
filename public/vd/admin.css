@@ -215,3 +215,15 @@ table.sample th { background: #fbf8f4; color: var(--muted); font-weight: 600; te
   .kv { grid-template-columns: 1fr; gap: 2px; }
   .kv dd { margin-bottom: 8px; }
 }
+
+/* Message d'erreur d'un champ : rouge, même placé dans un .field (dont les <span> sont gris par défaut). */
+.field > .field-error { color: var(--no); }
+
+/* Téléphone : les six onglets restent tous visibles, sur deux lignes (une barre qui défile cachait « Import / export »
+   et « Réglages » sans le montrer). La barre du haut, devenue plus haute, n'est plus collante : elle laisse la place
+   au contenu, et les liens « #… » n'ont plus besoin de marge sous elle. */
+@media (max-width: 760px) {
+  html { scroll-padding-top: 12px; }
+  .topbar { position: static; }
+  .nav { flex-wrap: wrap; overflow-x: visible; gap: 0 4px; }
+}

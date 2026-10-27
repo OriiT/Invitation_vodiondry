@@ -2,7 +2,7 @@
 //   /            invitation générique (sans lien personnel)
 //   /i/:code     invitation personnalisée d'un invité
 //   /api/rsvp/*  réponse Oui / Non
-//   /admin/*     administration (invités, relances, plan de table, réglages)
+//   /admin/*     administration (invités, relances, plan de table, budget, réglages)
 // Les fichiers du site (public/) sont servis directement par Workers Static Assets.
 
 import { Hono } from 'hono';

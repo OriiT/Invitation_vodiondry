@@ -3,7 +3,7 @@
 import type { Child, FC } from 'hono/jsx';
 import { SIDE_LABEL, type Answer, type GuestRow, type Side } from '../lib/db';
 import { formatDateTimeFr } from '../lib/settings';
-import { Layout } from './layout';
+import { Layout, type NavKey } from './layout';
 
 /** « 1 invité », « 3 invités » (0 et 1 au singulier, comme en français). */
 export function plural(n: number, one: string, many: string): string {
@@ -84,15 +84,32 @@ export function shortUa(ua: string): string {
   return ua.length > 60 ? `${ua.slice(0, 57)}…` : ua;
 }
 
+export interface NotFoundProps {
+  csrf: string;
+  text?: string;
+  /** Par défaut : page d'un invité (titre, onglet et lien de retour). */
+  title?: string;
+  active?: NavKey;
+  backHref?: string;
+  backLabel?: string;
+}
+
 /** Page « introuvable » de l'administration (404). */
-export const NotFoundPage: FC<{ csrf: string; text?: string }> = ({ csrf, text }) => (
-  <Layout title="Invité introuvable" active="guests" csrf={csrf}>
+export const NotFoundPage: FC<NotFoundProps> = ({
+  csrf,
+  text,
+  title = 'Invité introuvable',
+  active = 'guests',
+  backHref = '/admin',
+  backLabel = 'Retour à la liste des invités',
+}) => (
+  <Layout title={title} active={active} csrf={csrf}>
     <section class="card empty">
-      <h1>Invité introuvable</h1>
+      <h1>{title}</h1>
       <p class="muted">{text ?? 'Cet invité n’existe pas ou a été supprimé.'}</p>
       <p>
-        <a class="btn btn-primary" href="/admin">
-          Retour à la liste des invités
+        <a class="btn btn-primary" href={backHref}>
+          {backLabel}
         </a>
       </p>
     </section>

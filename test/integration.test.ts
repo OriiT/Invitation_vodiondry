@@ -5,16 +5,17 @@ import { env } from 'cloudflare:workers';
 import { describe, expect, it } from 'vitest';
 import { adminGet, adminJson, adminPost, login, makeGuest, rsvp, type AdminSession } from './helpers';
 
-const NAV_PAGES = ['/admin', '/admin/relances', '/admin/tables', '/admin/import', '/admin/settings'];
+const NAV_PAGES = ['/admin', '/admin/relances', '/admin/tables', '/admin/budget', '/admin/import', '/admin/settings'];
 
 const HOSTILE = '<script>alert("x")</script> Koto & "Soa"';
 
 interface Seeded {
   guestId: number;
   tableId: number;
+  budgetItemId: number;
 }
 
-/** Quelques invités, une table et des réponses : chaque page a quelque chose à afficher. */
+/** Quelques invités, une table, des réponses et un frais : chaque page a quelque chose à afficher. */
 async function seed(s: AdminSession): Promise<Seeded> {
   const lala = await makeGuest({ name: 'Tante Lala', side: 'rojo', expected_count: 3, phone: '034 00 000 01', notes: 'Arrive la veille' });
   const rabe = await makeGuest({ name: 'Famille Rabe', side: 'orimbato', expected_count: 4 });
@@ -27,7 +28,11 @@ async function seed(s: AdminSession): Promise<Seeded> {
   const table = await env.DB.prepare('SELECT id FROM tables').first<{ id: number }>();
   const placed = await adminJson(s, '/admin/tables/assign', { guest_id: hostile.id, table_id: table!.id });
   expect(placed.status).toBe(200);
-  return { guestId: hostile.id, tableId: table!.id };
+
+  const frais = { label: HOSTILE, detail: '<b>gras</b>', kind: 'forfait', amount: '400 000' };
+  expect((await adminPost(s, '/admin/budget', frais)).status).toBe(303);
+  const item = await env.DB.prepare('SELECT id FROM budget_items WHERE label = ?1').bind(HOSTILE).first<{ id: number }>();
+  return { guestId: hostile.id, tableId: table!.id, budgetItemId: item!.id };
 }
 
 function scriptTags(html: string): string[] {
@@ -77,7 +82,7 @@ describe('administration : cohérence de toutes les pages', () => {
 
   it('les pages secondaires suivent les mêmes règles', async () => {
     const s = await login();
-    const { guestId } = await seed(s);
+    const { guestId, budgetItemId } = await seed(s);
     for (const path of [
       '/admin/guests/new',
       `/admin/guests/${guestId}/edit`,
@@ -85,6 +90,7 @@ describe('administration : cohérence de toutes les pages', () => {
       '/admin/tables?side=orimbato&q=koto',
       '/admin?status=none&q=soa',
       '/admin/tables/print',
+      `/admin/budget/${budgetItemId}/edit`,
     ]) {
       await checkPage(s, path);
     }
@@ -100,7 +106,7 @@ describe('administration : cohérence de toutes les pages', () => {
 
   it('les noms et textes saisis sont échappés sur toutes les pages', async () => {
     const s = await login();
-    const { guestId } = await seed(s);
+    const { guestId, budgetItemId } = await seed(s);
     const pages = [
       '/admin',
       '/admin/relances',
@@ -108,6 +114,8 @@ describe('administration : cohérence de toutes les pages', () => {
       `/admin/guests/${guestId}/edit`,
       '/admin/tables/print',
       '/admin/tables/cards',
+      '/admin/budget',
+      `/admin/budget/${budgetItemId}/edit`,
     ];
     for (const path of pages) {
       const html = await (await adminGet(s, path)).text();
@@ -140,6 +148,7 @@ describe('administration : cohérence de toutes les pages', () => {
     for (const [path, prefix] of [
       ['/admin/export.csv', 'invites-vodiondry'],
       ['/admin/tables/export.csv', 'plan-de-table'],
+      ['/admin/budget/export.csv', 'budget-vodiondry'],
     ]) {
       const res = await adminGet(s, path);
       expect(res.status, path).toBe(200);

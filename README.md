@@ -5,11 +5,13 @@ Petite application web pour le **vodiondry du samedi 19 décembre 2026**
 
 - Chaque invité reçoit **son propre lien** (`https://vodiondry.<votre-compte>.workers.dev/i/k3m9x2pq`).
   Il ouvre l’invitation (l’enveloppe, la vidéo et les animations sont inchangées), avec son prénom
-  dans la carte « Réponse » : *« Neny, nous attendons votre réponse. »*
+  dans la carte « Réponse » : *« Neny, touchez Oui ou Non pour nous répondre avant le 12/12. »*
+  Si l’invité reste sur une page sans défiler, la page fait un petit rebond qui laisse entrevoir
+  la suivante (une fois par page, sans texte ajouté).
 - L’invité répond **Oui / Non** directement sur l’invitation (nombre de personnes, petit mot facultatif).
   Il peut modifier sa réponse jusqu’à la date limite (12/12/2026 par défaut, modifiable).
 - Les mariés suivent tout depuis l’**administration** (`/admin`, protégée par mot de passe) :
-  invités, réponses, relances WhatsApp, import/export, plan de table, marque-tables.
+  invités, réponses, relances WhatsApp, import/export, plan de table, marque-tables, budget.
 - Aucun compte n’est demandé aux invités. Hébergement **gratuit** chez Cloudflare.
 
 ---
@@ -442,7 +444,8 @@ database_id = "8c1f2a4e-1234-4abc-9def-0123456789ab"
 npx wrangler d1 migrations apply vodiondry --remote
 ```
 
-Répondez **y** (oui) à la question. Le terminal affiche `0001_init.sql ✅` puis `0002_former_names.sql ✅`.
+Répondez **y** (oui) à la question. Le terminal affiche `0001_init.sql ✅`, `0002_former_names.sql ✅`
+puis `0003_budget.sql ✅`.
 
 ### Étape B5 — Choisir le mot de passe de l’administration
 
@@ -601,6 +604,36 @@ Onglet **Plan de table** :
 
 Si un invité répond finalement « non », il est retiré automatiquement de sa table.
 
+### Budget
+
+Onglet **Budget** : le budget du fichier Excel pour l’option retenue (grande salle de La Rizière et
+Grill Traiteur Parasoly, menu 3 à 45 000 Ar par personne). Le nombre de personnes vient de la liste
+d’invités : le budget se met à jour tout seul quand les réponses arrivent.
+
+- **Trois colonnes**, chacune avec le nombre de personnes, le total et le coût par personne :
+  - **Prévu** : tous les invités de la liste (nombre prévu pour chacun) + les personnes hors liste ;
+  - **Estimation** : les « oui » (nombre confirmé) + les invités sans réponse (nombre prévu) + les
+    personnes hors liste. Les « non » ne comptent plus. C’est le chiffre le plus utile pour le traiteur ;
+  - **Confirmé** : seulement les « oui » (nombre confirmé) + les personnes hors liste.
+- **Total** = forfaits + (montants par personne × nombre de personnes). Les **forfaits** (salle,
+  housses de chaises, nappes, décoration…) ne changent pas avec le nombre de personnes ; les montants
+  **par personne** (menu, couverts…) sont multipliés par le nombre de personnes de chaque colonne.
+- **Ajouter un poste de dépense** (en bas de la page) : nom du poste, détail facultatif, type (**Forfait** ou
+  **Par personne**) et montant en Ariary (« 400 000 », « 400000 » ou « 400 000 Ar » : les trois sont
+  acceptés, sans virgule). Pour un poste par personne, indiquez le prix d’**une** personne.
+- **Modifier** / **Supprimer** sur chaque ligne (par exemple quand Parasoly confirme le prix des couverts).
+  Un poste compris dans un autre (sono, gâteau…) reste à 0 Ar pour mémoire.
+- **Personnes hors liste d’invités** : les personnes qui mangent au repas mais ne sont pas dans la
+  liste d’invités. Elles s’ajoutent aux trois colonnes. Réglé à 7 au départ, comme dans le fichier
+  Excel : 83 personnes = 76 invités de la liste + 7 (Orimbato, la famille non listée (5), le
+  mpikabary). Rojo n’y figure pas : mettez 8 pour le compter.
+- **Exporter (CSV)** : chaque poste avec ses totaux, puis les sous-totaux, le nombre de personnes,
+  le total et le coût par personne des trois colonnes (s’ouvre dans Excel).
+
+Rien à faire pour l’installer : avec la mise en ligne automatique (partie 2), la table du budget
+est créée à la prochaine mise en ligne (`migrations/0003_budget.sql`, appliquée par GitHub Actions) ;
+avec la partie 3, `npm run deploy` s’en charge.
+
 ### Réglages
 
 Onglet **Réglages** : texte du message WhatsApp d’invitation et de relance (variables `{nom}`,
@@ -632,14 +665,15 @@ npm run deploy
 
 Dans cet ordre (tout se fait dans le navigateur) :
 
-1. (Facultatif) Gardez un souvenir : **/admin → Import / export → Exporter (CSV)**.
+1. (Facultatif) Gardez un souvenir : **/admin → Import / export → Exporter (CSV)** (invités et réponses)
+   et **/admin → Budget → Exporter (CSV)** (budget).
 2. Si vous utilisez la mise en ligne automatique (partie 2) : GitHub → **Actions → Tests et mise en
    ligne → ⋯ → Disable workflow** (sinon une future modification de `main` recréerait le site).
 3. Tableau de bord Cloudflare :
    - **Workers & Pages → vodiondry → Settings → Delete** : le site et l’administration ne sont plus
      accessibles (les secrets sont supprimés avec lui) ;
    - **Storage & Databases → D1 → vodiondry → Settings → Delete** : la base de données (invités,
-     réponses, ouvertures, tables) est **définitivement** effacée.
+     réponses, ouvertures, tables, budget) est **définitivement** effacée.
 4. Seulement ensuite : GitHub → **Settings → Secrets and variables → Actions** : supprimez les quatre
    secrets ; Cloudflare → **My Profile → API Tokens** : supprimez le jeton ; sur le serveur, supprimez
    le fichier `.env` s’il existe.
@@ -760,22 +794,26 @@ Faites ce choix **avant** d’envoyer les invitations : les liens déjà envoyé
   `wrangler deploy`.
 - `public/index.html` et `public/a/` = le site d’invitation **tel que livré**, sans aucune modification
   (un test vérifie son empreinte). Pour un lien personnel, le Worker ajoute à la volée les données de
-  l’invité et `public/vd/rsvp.js`, qui personnalise la phrase de la carte « Réponse » et ouvre la
-  fenêtre de réponse quand on touche « Oui, je viens » / « Non ».
+  l’invité et `public/vd/rsvp.js`, qui personnalise la phrase de la carte « Réponse », ouvre la
+  fenêtre de réponse quand on touche « Oui, je viens » / « Non », rend « Découvrir » cliquable et fait
+  le petit rebond vers la page suivante (désactivé si le téléphone demande moins d’animations).
 - Administration rendue côté serveur (`src/routes/admin/`, `src/views/`), un peu de JavaScript sans
   framework (`public/vd/admin.js`, `public/vd/tables.js` + SortableJS pour le glisser-déposer).
 - Base de données : `migrations/0001_init.sql` — `guests`, `responses` (une ligne par réponse ou
   changement, la plus récente fait foi), `opens` (ouvertures du lien : date, navigateur ; des visites
   à moins de 30 minutes d’intervalle comptent pour une), `tables`, `settings` ;
   `migrations/0002_former_names.sql` — `former_names` (anciens noms des invités renommés et noms des
-  invités supprimés, consultés par l’import).
+  invités supprimés, consultés par l’import) ; `migrations/0003_budget.sql` — `budget_items` (postes du
+  budget : forfaits et montants par personne, préremplis avec l’option retenue du fichier Excel) et le
+  réglage `budget_extra_people` (personnes hors liste d’invités, 7 au départ). Les nouvelles migrations
+  sont appliquées automatiquement à chaque mise en ligne (GitHub Actions ou `npm run deploy`).
 
 | Adresse | Rôle |
 |---|---|
 | `/` | invitation générique (sans lien personnel) |
 | `/i/<code>` | invitation personnelle (ouverture enregistrée, sauf robots d’aperçu WhatsApp et visites des mariés connectés) |
 | `POST /api/rsvp/<code>` | réponse `{ "answer": "oui" \| "non", "count": 3, "message": "…" }` |
-| `/admin` | administration (invités, relances, plan de table, import/export, réglages) |
+| `/admin` | administration (invités, relances, plan de table, budget, import/export, réglages) |
 
 ### Sécurité
 
@@ -790,7 +828,7 @@ Faites ce choix **avant** d’envoyer les invitations : les liens déjà envoyé
 
 ### Tests
 
-Tests automatiques (API, réponses, administration, plan de table, import) et vérification des types :
+Tests automatiques (API, réponses, administration, plan de table, budget, import) et vérification des types :
 
 ```
 npm test
